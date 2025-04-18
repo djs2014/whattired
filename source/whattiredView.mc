@@ -41,9 +41,10 @@ class whattiredView extends WatchUi.DataField {
   var mShowValues as Boolean = true;
   var mShowColors as Boolean = true;
   var mFocus as EnumFocus = FocusNothing;
+  var mLargeField as Boolean = false;
   var mSmallField as Boolean = false;
   var mWideField as Boolean = false;
-  var mTinyField as Boolean = false;
+  
   var mShowFBCCircles as Boolean = false;
   var mShowAscDesc as Boolean = false;
   var mDataSaved as Boolean = true;
@@ -73,8 +74,12 @@ class whattiredView extends WatchUi.DataField {
     mWidth = dc.getWidth();
     mShowFBCCircles = false;
 
-    mWideField = mWidth > 200;
-    if (mHeight <= 100) {
+    var ef = $.getEdgeField(dc);
+    mLargeField = ef == EfLarge;
+    mSmallField = ef == EfSmall;
+    mWideField = ef == EfWide;
+
+    if (mSmallField) {
       mFontText = Graphics.FONT_XTINY;
       mShowValues = $.gShowValuesSmallField;
       mShowColors = $.gShowColorsSmallField;
@@ -89,8 +94,7 @@ class whattiredView extends WatchUi.DataField {
       mSmallField = false;
       mShowAscDesc = true;
     }
-    mTinyField = mSmallField && !mWideField;
-
+    
     mLabelWidth = dc.getTextWidthInPixels("Month", mFontText) + 2;
     mLabelWidthFocused = dc.getTextWidthInPixels("M", mFontText) + 2;
     mLineHeight = dc.getFontHeight(mFontText) - 1;
@@ -614,7 +618,7 @@ class whattiredView extends WatchUi.DataField {
     var x3Start = x3;
     var barWidthStart = barWidth;
 
-    if (nothingHasFocus && !mTinyField) {
+    if (nothingHasFocus && !mSmallField) {
       dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
       dc.drawText(x, y, mFontText, "Front", Graphics.TEXT_JUSTIFY_LEFT);
       dc.drawText(x2, y, mFontText, "Chain", Graphics.TEXT_JUSTIFY_LEFT);
