@@ -75,7 +75,7 @@ class whattiredView extends WatchUi.DataField {
     mShowFBCCircles = false;
 
     var ef = $.getEdgeField(dc);
-    mLargeField = ef == EfLarge;
+    mLargeField = ef == EfLarge || ef == EfOne;
     mSmallField = ef == EfSmall;
     mWideField = ef == EfWide;
 
