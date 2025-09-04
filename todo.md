@@ -1,3 +1,7 @@
+bug - switch profile totals
+- then do not save when swithcing profile (old value != new profile name)
+dark bg -> bars gray 
+
 bug in simulator -- @@TODO check on device
 ride 2.33 km
 stop activity 

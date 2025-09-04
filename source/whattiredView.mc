@@ -148,7 +148,10 @@ class whattiredView extends WatchUi.DataField {
         if (info.timerState == Activity.TIMER_STATE_STOPPED) {
           saveTotals("compute TIMER_STATE_STOPPED");
         } else if (info.timerState == Activity.TIMER_STATE_OFF) {
-          saveTotals("compute TIMER_STATE_OFF");
+          // Do nothing when there is no activity
+          // Fix when no activity and switching profile
+          // TODO: if switch profile -> load totals
+          // saveTotals("compute TIMER_STATE_OFF");
         } else if (info.timerState == Activity.TIMER_STATE_ON) {
           mDataSaved = false;
         }
