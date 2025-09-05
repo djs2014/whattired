@@ -191,7 +191,7 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     if (id instanceof String && id.equals("tireRecording")) {
       var sp = new selectionMenuPicker("Tire recording f/b", id as String);
 
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 5; i++) {
         sp.add($.getTireRecordingAsString(i as EnumTireRecording), null, i);
       }
 
@@ -203,7 +203,7 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     if (id instanceof String && id.equals("chainRecording")) {
       var sp = new selectionMenuPicker("Chain recording", id as String);
 
-      for (var i = 0; i < 7; i++) {
+      for (var i = 0; i < 6; i++) {
         sp.add($.getChainRecordingAsString(i as EnumChainRecording), null, i);
       }
 
