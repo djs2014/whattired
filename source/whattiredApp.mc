@@ -11,7 +11,7 @@ var gShowCurrentProfile as Boolean = false;
 var gShowFocusSmallField as EnumFocus = FocusRide;
 var gTrackRecording as EnumTrackRecording = TrackRecAlways;
 var gTrackRecordingActive as Boolean = true;
-var gTireRecording as EnumTireRecording = TireRecDefault;
+var gTireRecording as EnumTireRecording = TireRecProfile;
 var gChainRecording as EnumChainRecording = ChainRecAsTire;
 var gActivityProfileId as String = "";
 var gActivityProfileName as String = "";
@@ -68,14 +68,24 @@ class whattiredApp extends Application.AppBase {
     try {
       System.println("Load usersettings");
 
-      // var version = getStorageValue("version", "") as String;
-      // if (!version.equals("1.1.0")) {
-      //   Storage.setValue("version", "1.1.0");
-      //   mTotals.convertMetersToKm();
-      // }
+      var version = getStorageValue("version", "") as String;
+      if (!version.equals("1.10.1")) {
+        Storage.setValue("version", "1.10.1");
+        // Remove first enum entry
+        var tr = $.getStorageValue("tireRecording", 0) as Number;
+        if (tr > 0) {
+          tr = tr - 1;
+          Storage.setValue("tireRecording", tr);
+        } 
+        var cr = $.getStorageValue("chainRecording", 0) as Number;
+        if (cr > 0) {
+          cr = cr - 1;
+          Storage.setValue("chainRecording", cr);
+        } 
+      }
 
-      $.gTireRecording = $.getStorageValue("tireRecording", $.gTireRecording) as EnumTireRecording;
-      $.gChainRecording = $.getStorageValue("chainRecording", $.gChainRecording) as EnumChainRecording;
+      $.gTireRecording = $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
+      $.gChainRecording = $.getStorageValue("chainRecording", ChainRecAsTire) as EnumChainRecording;
 
       mTotals.load(true);
       $.gShowColors = $.getStorageValue("showColors", $.gShowColors) as Boolean;

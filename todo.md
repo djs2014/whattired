@@ -1,3 +1,4 @@
+TODO: remove TireRecDefault -> or change to TireRecAllTogether -> useless?
 bug - switch profile totals
 - then do not save when swithcing profile (old value != new profile name)
 dark bg -> bars gray 

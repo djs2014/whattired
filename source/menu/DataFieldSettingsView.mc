@@ -143,8 +143,8 @@ function getTrackRecordingAsString(value as EnumTrackRecording) as String {
 
 function getTireRecordingAsString(value as EnumTireRecording) as String {
   switch (value) {
-    case TireRecDefault:
-      return "default";
+    // case TireRecDefault:
+    //   return "default";    
     case TireRecProfile:
       return $.getProfileName("profile");
     case TireRecSetA:
@@ -156,14 +156,14 @@ function getTireRecordingAsString(value as EnumTireRecording) as String {
     case TireRecSetD:
       return "tire D";
     default:
-      return "default";
+      return $.getProfileName("profile");
   }
 }
 
 function getChainRecordingAsString(value as EnumChainRecording) as String {
   switch (value) {
-    case ChainRecDefault:
-      return "default";
+    // case ChainRecDefault:
+    //   return "default";
     case ChainRecProfile:
       return $.getProfileName("profile");
     case ChainRecAsTire:
@@ -177,6 +177,6 @@ function getChainRecordingAsString(value as EnumChainRecording) as String {
     case ChainRecSetD:
       return "chain D";
     default:
-      return "default";
+      return $.getProfileName("profile");
   }
 }

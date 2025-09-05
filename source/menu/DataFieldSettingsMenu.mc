@@ -53,11 +53,11 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
       var tr = $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
       var labelTireRec = $.getTireRecordingAsString(tr);
-      if (labelTireRec.equals("default")) {
-        labelTireRec = "";
-      } else {
+      // if (labelTireRec.equals("default")) {
+      //   labelTireRec = "";
+      // } else {
         labelTireRec = " for " + labelTireRec;
-      }
+      // }
       var trp = $.getTireRecPostfix();
       mi = new WatchUi.MenuItem("Front " + labelTireRec + " |. (km/0.001)", null, "totalDistanceFrontTyre" + trp, null);
       mi.setSubLabel($.getDistanceMenuSubLabel(mi.getId() as String));

@@ -54,6 +54,8 @@ class Totals {
   private var totalDistanceChain as Float = 0.0f;
   private var maxDistanceChain as Float = 0.0f;
 
+  private var currentProfileId as String? = null;
+
   hidden function GetElapsedDistance() as Float {
     return elapsedDistanceActivity + debugElapsedDistance;
   }
@@ -204,7 +206,32 @@ class Totals {
 
   function initialize() {}
 
+  function getCurrentProfile() as String? {
+    var info = Activity.getProfileInfo();
+    if (info == null) { return null; }
+    var arr = info.uniqueIdentifier;
+    if (arr == null) { return null; }
+    return arr.toString();
+  }
+
   function compute(info as Activity.Info) as Void {
+
+    // TODO: if switch profile -> load totals but do not save!
+    if (currentProfileId == null) {
+      currentProfileId = getCurrentProfile();
+    } else {
+      var profileId = getCurrentProfile();
+      if (profileId != null) {
+        if (!profileId.equals(currentProfileId)) {
+          System.println("ProfileSwitch");
+          currentProfileId = profileId;
+          // Profile switch, load totals
+          loadTireDistance(true);
+          loadChainDistance(true);
+        }
+      }
+    }
+
     if (info has :elapsedDistance) {
       if (info.elapsedDistance != null) {
         elapsedDistanceActivity = info.elapsedDistance as Float;
@@ -612,8 +639,8 @@ class Total {
 
 function getTireRecPostfix() as String {
   switch ($.gTireRecording) {
-    case TireRecDefault:
-      return "";
+    // case TireRecDefault:
+    //   return "";
     case TireRecProfile:
       var info = Activity.getProfileInfo();
       if (info == null) {
@@ -633,24 +660,26 @@ function getTireRecPostfix() as String {
       return "C";
     case TireRecSetD:
       return "D";
+    default:
+      
   }
   return "";
 }
 
 function getChainRecPostfix() as String {
   switch ($.gChainRecording) {
-    case ChainRecDefault:
-      return "";
+    // case ChainRecDefault:
+    //   return "";
     case ChainRecProfile:
-      var info = Activity.getProfileInfo();
-      if (info == null) {
-        return $.gActivityProfileId;
-      }
-      var arr = info.uniqueIdentifier;
-      if (arr == null) {
-        return $.gActivityProfileId;
-      }
-      $.gActivityProfileId = arr.toString();
+      // var info = Activity.getProfileInfo();
+      // if (info == null) {
+      //   return $.gActivityProfileId;
+      // }
+      // var arr = info.uniqueIdentifier;
+      // if (arr == null) {
+      //   return $.gActivityProfileId;
+      // }
+      $.gActivityProfileId = $.getProfileId();
       return $.gActivityProfileId;
     case ChainRecAsTire:
       return getTireRecPostfix();
@@ -663,7 +692,8 @@ function getChainRecPostfix() as String {
     case ChainRecSetD:
       return "D";
   }
-  return "";
+  $.gActivityProfileId = $.getProfileId();
+  return $.gActivityProfileId;
 }
 
 
@@ -679,4 +709,16 @@ function getProfileName(def as String) as String {
       return def;
     }
     return $.gActivityProfileName;    
+}
+
+function getProfileId() as String {
+  var info = Activity.getProfileInfo();
+  if (info == null) {
+    return $.gActivityProfileId;
+  }
+  var arr = info.uniqueIdentifier;
+  if (arr == null) {
+    return $.gActivityProfileId;
+  }
+  return arr.toString();
 }

@@ -140,6 +140,9 @@ class whattiredView extends WatchUi.DataField {
   }
 
   function compute(info as Activity.Info) as Void {
+          
+          // TODO: if switch profile -> load totals but do not save!
+
     mTotals.compute(info);
 
     // not always onTimerStop and onTimerReset is executed (??)
@@ -148,10 +151,7 @@ class whattiredView extends WatchUi.DataField {
         if (info.timerState == Activity.TIMER_STATE_STOPPED) {
           saveTotals("compute TIMER_STATE_STOPPED");
         } else if (info.timerState == Activity.TIMER_STATE_OFF) {
-          // Do nothing when there is no activity
-          // Fix when no activity and switching profile
-          // TODO: if switch profile -> load totals
-          // saveTotals("compute TIMER_STATE_OFF");
+          saveTotals("compute TIMER_STATE_OFF");
         } else if (info.timerState == Activity.TIMER_STATE_ON) {
           mDataSaved = false;
         }
@@ -828,15 +828,16 @@ class whattiredView extends WatchUi.DataField {
     }
 
     // @@ TODO tire / chain -> calc and cached
-    var tr = $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
-    var labelT = $.getTireRecordingAsString(tr);
-    if (labelT.equals("default")) {
-      labelT = "";
-    }
+    // var tr = $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
+
+    var labelT = $.getTireRecordingAsString($.gTireRecording);
+    // if (labelT.equals("default")) {
+    //   labelT = "";
+    // }
 
     var cr = $.getStorageValue("chainRecording", ChainRecProfile) as EnumChainRecording;
     var labelC = $.getChainRecordingAsString(cr);
-    if (labelC.equals("default") || labelC.equals("as tire")) {
+    if (labelC.equals("as tire") || labelC.equals(labelT)) {
       labelC = "";
     }
     var label = labelT;

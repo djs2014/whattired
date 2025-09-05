@@ -22,20 +22,20 @@ enum EnumTrackRecording {
 }
 
 enum EnumTireRecording {
-  TireRecDefault = 0,
-  TireRecProfile = 1,
-  TireRecSetA = 2,
-  TireRecSetB = 3,
-  TireRecSetC = 4,
-  TireRecSetD = 5,
+  // TireRecDefault = 0,
+  TireRecProfile = 0,
+  TireRecSetA = 1,
+  TireRecSetB = 2,
+  TireRecSetC = 3,
+  TireRecSetD = 4,
 }
 
 enum EnumChainRecording {
-  ChainRecDefault = 0,
-  ChainRecProfile = 1,
-  ChainRecAsTire = 2,
-  ChainRecSetA = 3,
-  ChainRecSetB = 4,
-  ChainRecSetC = 5,
-  ChainRecSetD = 6,
+  // ChainRecDefault = 0,
+  ChainRecProfile = 0,
+  ChainRecAsTire = 1,
+  ChainRecSetA = 2,
+  ChainRecSetB = 3,
+  ChainRecSetC = 4,
+  ChainRecSetD = 5,
 }
