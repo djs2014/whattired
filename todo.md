@@ -1,3 +1,39 @@
+use key|idx
+
+
+show custom fields / warnings
+- option to reset custom 1 / custom 2
+x- change label / tag DI2 
+ - draw perc line now to target  based on km/timer/elapsed
+ x- option to show custom 1 , custum 2
+ x- set target custom x: km / timer min / elapsed min
+
+x no unit on right
+edit minutes  
+
+Custom alarm - Charge after x km -> di2 / powermeter / etc. /
+Charge after x hours -> hr / power / etc
+Focus altitude
+show per field / one / wide / small
+
+- Custom Alerts per profile (enable for all or current profile)
+  1 DI2
+  unit km / hour elapsed distance/elapsed time
+  current
+  max / every 2000 
+  
+  2 Power
+  unit km / hour
+  current 
+  max / every 80 -> on every == auto reset ?==> nope no every -> custom action to reset
+
+
+
+Show cust1 / 2
+Show info per field size
+Zen mode -> only colors..?
+
+
 TODO: remove TireRecDefault -> or change to TireRecAllTogether -> useless?
 bug - switch profile totals
 - then do not save when swithcing profile (old value != new profile name)
