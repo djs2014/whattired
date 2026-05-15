@@ -46,42 +46,76 @@ class DataFieldSettingsDelegate extends WatchUi.BehaviorDelegate {
   //! @return true if handled, false otherwise
   public function onMenu() as Boolean {
     var menu = new $.DataFieldSettingsMenu();
+    var value;
 
     var mi = new WatchUi.MenuItem("Reset options", null, "resetOptions", null);
     menu.addItem(mi);
 
-    mi = new WatchUi.MenuItem("Focus", null, "showFocusSmallField", null);
-    var value = getStorageValue(mi.getId() as String, FocusNothing) as EnumFocus;
-    mi.setSubLabel($.getFocusAsString(value));
-    menu.addItem(mi);
-
     mi = new WatchUi.MenuItem("Track recording", null, "trackRecording", null);
-    value = getStorageValue(mi.getId() as String, TrackRecAlways) as EnumTrackRecording;
+    value =
+      getStorageValue(mi.getId() as String, TrackRecAlways) as
+      EnumTrackRecording;
     mi.setSubLabel($.getTrackRecordingAsString(value));
     menu.addItem(mi);
 
     mi = new WatchUi.MenuItem("Tire recording", null, "tireRecording", null);
-    value = getStorageValue(mi.getId() as String, TireRecProfile) as EnumTireRecording;
+    value =
+      getStorageValue(mi.getId() as String, TireRecProfile) as
+      EnumTireRecording;
     mi.setSubLabel($.getTireRecordingAsString(value));
     menu.addItem(mi);
 
     mi = new WatchUi.MenuItem("Chain recording", null, "chainRecording", null);
-    value = getStorageValue(mi.getId() as String, ChainRecAsTire) as EnumChainRecording;
-    mi.setSubLabel($.getChainRecordingAsString(value));    
+    value =
+      getStorageValue(mi.getId() as String, ChainRecAsTire) as
+      EnumChainRecording;
+    mi.setSubLabel($.getChainRecordingAsString(value));
     menu.addItem(mi);
 
     mi = new WatchUi.MenuItem("Distance", null, "menuDistance", null);
     mi.setSubLabel("Manage distance settings");
     menu.addItem(mi);
 
-    mi = new WatchUi.MenuItem("Show options", null, "showOptions", null);
+    mi = new WatchUi.MenuItem(
+      "Custom alert 1",
+      null,
+      "customAlert1Units",
+      null
+    );
+    value =
+      getStorageValue(mi.getId() as String, CustomAlertDisabled) as
+      EnumCustomAlertUnits;
+    mi.setSubLabel($.getEnumUnitAsString(value));
     menu.addItem(mi);
 
-    mi = new WatchUi.MenuItem("Show fields", null, "menuFields", null);
-    mi.setSubLabel("Display data");
+    mi = new WatchUi.MenuItem(
+      "Custom alert 2",
+      null,
+      "customAlert2Units",
+      null
+    );
+    value =
+      getStorageValue(mi.getId() as String, CustomAlertDisabled) as
+      EnumCustomAlertUnits;
+    mi.setSubLabel($.getEnumUnitAsString(value));
     menu.addItem(mi);
 
-    WatchUi.pushView(menu, new $.DataFieldSettingsMenuDelegate(), WatchUi.SLIDE_IMMEDIATE);
+    mi = new WatchUi.MenuItem("Custom alerts", null, "menuCustomAlerts", null);
+    mi.setSubLabel("Manage custom alerts");
+    menu.addItem(mi);
+
+    mi = new WatchUi.MenuItem("Large field", null, "show_large_field", null);
+    menu.addItem(mi);
+    mi = new WatchUi.MenuItem("Wide field", null, "show_wide_field", null);
+    menu.addItem(mi);
+    mi = new WatchUi.MenuItem("Small field", null, "show_small_field", null);
+    menu.addItem(mi);
+
+    WatchUi.pushView(
+      menu,
+      new $.DataFieldSettingsMenuDelegate(),
+      WatchUi.SLIDE_IMMEDIATE
+    );
     return true;
   }
 
@@ -96,7 +130,16 @@ class DataFieldSettingsDelegate extends WatchUi.BehaviorDelegate {
 // Globals
 //Always in km
 function getDistanceMenuSubLabel(key as Application.PropertyKeyType) as String {
-  return ((getStorageValue(key, 0.0f) as Float) / 1000).format("%.2f") + " km";
+  return (
+    ((getStorageValue(key, 0.0f) as Float) / 1000.0).format("%.2f") + " km"
+  );
+}
+// Alwasy in minutes
+function getDurationMenuSubLabel(key as Application.PropertyKeyType) as String {
+  return (
+    ((getStorageValue(key, 0.0f) as Float) / 1000.0 / 60.0).format("%.2f") +
+    " min"
+  );
 }
 
 function getFocusAsString(value as EnumFocus) as String {
@@ -121,6 +164,12 @@ function getFocusAsString(value as EnumFocus) as String {
       return "Course";
     case FocusTrack:
       return "Track";
+    case FocusChain:
+      return "Chain";
+    case FocusCustom1:
+      return "Custom 1";
+    case FocusCustom2:
+      return "Custom 2";
     default:
       return "Nothing";
   }
@@ -144,7 +193,7 @@ function getTrackRecordingAsString(value as EnumTrackRecording) as String {
 function getTireRecordingAsString(value as EnumTireRecording) as String {
   switch (value) {
     // case TireRecDefault:
-    //   return "default";    
+    //   return "default";
     case TireRecProfile:
       return $.getProfileName("profile");
     case TireRecSetA:
@@ -178,5 +227,20 @@ function getChainRecordingAsString(value as EnumChainRecording) as String {
       return "chain D";
     default:
       return $.getProfileName("profile");
+  }
+}
+
+function getEnumUnitAsString(value as EnumCustomAlertUnits) as String {
+  switch (value) {
+    case CustomAlertDisabled:
+      return "disabled";
+    case CustomAlertDistance:
+      return "distance";
+    case CustomAlertTimer:
+      return "timer (skip paused)";
+    case CustomAlertElapsed:
+      return "elapsed (total activity)";
+    default:
+      return "disabled";
   }
 }

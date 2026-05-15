@@ -2,33 +2,16 @@ import Toybox.Application;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-var gShowColors as Boolean = true;
-var gShowValues as Boolean = true;
-var gShowLastDistance as Boolean = true;
-var gShowColorsSmallField as Boolean = true;
-var gShowValuesSmallField as Boolean = false;
 var gShowCurrentProfile as Boolean = false;
-var gShowFocusSmallField as EnumFocus = FocusRide;
 var gTrackRecording as EnumTrackRecording = TrackRecAlways;
-var gTrackRecordingActive as Boolean = true;
 var gTireRecording as EnumTireRecording = TireRecProfile;
 var gChainRecording as EnumChainRecording = ChainRecAsTire;
 var gActivityProfileId as String = "";
 var gActivityProfileName as String = "";
-var gshowDateNumbers as Boolean = false;
 
-var gShowOdo as Boolean = true;
-var gShowYear as Boolean = true;
-var gShowMonth as Boolean = true;
-var gShowWeek as Boolean = true;
-var gShowRide as Boolean = true;
-var gShowTrack as Boolean = true;
-var gShowFront as Boolean = true;
-var gShowBack as Boolean = true;
-var gShowChain as Boolean = true;
-var gNrOfDefaultFields as Number = 5;
 var gTireRecPostfix as String = "-";
 var gChainRecPostfix as String = "-";
+var gCustomProfileId as String = "-";
 
 class whattiredApp extends Application.AppBase {
   var mTotals as Totals = new Totals();
@@ -44,14 +27,17 @@ class whattiredApp extends Application.AppBase {
   function onStop(state as Dictionary?) as Void {}
 
   //! Return the initial view of your application here
-  function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
+  function getInitialView() as [WatchUi.Views] or
+    [WatchUi.Views, WatchUi.InputDelegates] {
     loadUserSettings();
     return [new whattiredView()];
   }
 
   //! Return the settings view and delegate for the app
   //! @return Array Pair [View, Delegate]
-  public function getSettingsView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] or Null {
+  public function getSettingsView() as [WatchUi.Views] or
+    [WatchUi.Views, WatchUi.InputDelegates] or
+    Null {
     return [new $.DataFieldSettingsView(), new $.DataFieldSettingsDelegate()];
   }
 
@@ -76,62 +62,90 @@ class whattiredApp extends Application.AppBase {
         if (tr > 0) {
           tr = tr - 1;
           Storage.setValue("tireRecording", tr);
-        } 
+        }
         var cr = $.getStorageValue("chainRecording", 0) as Number;
         if (cr > 0) {
           cr = cr - 1;
           Storage.setValue("chainRecording", cr);
-        } 
+        }
+      }
+      var conversion = Storage.getValue("show_small_field");
+      if (conversion == null) {
+        conversionToArrays();
+      }
+      // TODO
+      // var reset = getStorageValue("reset", false) as Boolean;
+
+      $.gTireRecording =
+        $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
+      $.gChainRecording =
+        $.getStorageValue("chainRecording", ChainRecAsTire) as
+        EnumChainRecording;
+
+      $.gCustomAlert1Units =
+        $.getStorageValue("customAlert1Units", $.gCustomAlert1Units) as
+        EnumCustomAlertUnits;
+      $.gCustomAlert2Units =
+        $.getStorageValue("customAlert2Units", $.gCustomAlert2Units) as
+        EnumCustomAlertUnits;
+
+      $.gCustomCountersEnabled =
+        $.gCustomAlert1Units != CustomAlertDisabled ||
+        $.gCustomAlert2Units != CustomAlertDisabled;
+
+      if ($.gCustomCountersEnabled) {
+        $.gCustomAlert1Label = maxChars(
+          $.getStorageValue("text_customAlertLabel1", $.gCustomAlert1Label) as
+            String,
+          10
+        );
+
+        $.gCustomAlert2Label = maxChars(
+          $.getStorageValue("text_customAlertLabel2", $.gCustomAlert2Label) as
+            String,
+          10
+        );
       }
 
-      $.gTireRecording = $.getStorageValue("tireRecording", TireRecProfile) as EnumTireRecording;
-      $.gChainRecording = $.getStorageValue("chainRecording", ChainRecAsTire) as EnumChainRecording;
+      
 
-      mTotals.load(true);
-      $.gShowColors = $.getStorageValue("showColors", $.gShowColors) as Boolean;
-      $.gShowValues = $.getStorageValue("showValues", $.gShowValues) as Boolean;
-      $.gShowLastDistance = $.getStorageValue("showLastDistance", $.gShowLastDistance) as Boolean;
-      $.gShowColorsSmallField = $.getStorageValue("showColorsSmallField", $.gShowColorsSmallField) as Boolean;
-      $.gshowDateNumbers = $.getStorageValue("showDateNumbers", $.gshowDateNumbers) as Boolean;
+      $.gShow_LargeField =
+        $.getStorageValue(
+          "show_large_field",
+          $.gShow_LargeField as Array<Application.PropertyValueType>
+        ) as Array<Number>;
+      $.gShow_WideField =
+        $.getStorageValue(
+          "show_wide_field",
+          $.gShow_WideField as Array<Application.PropertyValueType>
+        ) as Array<Number>;
+      $.gShow_SmallField =
+        $.getStorageValue(
+          "show_small_field",
+          $.gShow_SmallField as Array<Application.PropertyValueType>
+        ) as Array<Number>;
 
-      $.gShowFocusSmallField = $.getStorageValue("showFocusSmallField", gShowFocusSmallField) as EnumFocus;
-      $.gTrackRecording = $.getStorageValue("trackRecording", gTrackRecording) as EnumTrackRecording;
-
-      $.gShowOdo = $.getStorageValue("showOdo", $.gShowOdo) as Boolean;
-      $.gShowYear = $.getStorageValue("showYear", $.gShowYear) as Boolean;
-      $.gShowMonth = $.getStorageValue("showMonth", $.gShowMonth) as Boolean;
-      $.gShowWeek = $.getStorageValue("showWeek", $.gShowWeek) as Boolean;
-      $.gShowRide = $.getStorageValue("showRide", $.gShowRide) as Boolean;
-      $.gShowTrack = $.getStorageValue("showTrack", $.gShowTrack) as Boolean;
-
-      $.gShowFront = $.getStorageValue("showFront", $.gShowFront) as Boolean;
-      $.gShowBack = $.getStorageValue("showBack", $.gShowBack) as Boolean;
-      $.gShowChain = $.getStorageValue("showChain", $.gShowChain) as Boolean;
-
-      $.gNrOfDefaultFields = 0;
-      if ($.gShowOdo) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-      if ($.gShowYear) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-      if ($.gShowMonth) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-      if ($.gShowWeek) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-      if ($.gShowRide) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-      if ($.gShowTrack) {
-        $.gNrOfDefaultFields = $.gNrOfDefaultFields + 1;
-      }
-
-      $.gTrackRecordingActive =
+      $.gTrackRecording =
+        $.getStorageValue("trackRecording", gTrackRecording) as
+        EnumTrackRecording;
+      
+      // Determine if track recording should be active based on settings
+      var hasAnyFieldShowTrack =
+        $.gShow_LargeField[6] == true ||
+        $.gShow_WideField[6] == true ||
+        $.gShow_SmallField[6] == true;
+      var hasAnyFieldFocusTrack =
+        $.gShow_LargeField[0] == FocusTrack ||
+        $.gShow_WideField[0] == FocusTrack ||
+        $.gShow_SmallField[0] == FocusTrack;
+      var trackRecordingActive =
         $.gTrackRecording == TrackRecAlways ||
-        ($.gTrackRecording == TrackRecWhenVisible and $.gShowTrack) ||
-        ($.gTrackRecording == TrackRecWhenFocus and $.gShowFocusSmallField == FocusTrack);
+        ($.gTrackRecording == TrackRecWhenVisible and hasAnyFieldShowTrack) ||
+        ($.gTrackRecording == TrackRecWhenFocus and hasAnyFieldFocusTrack);
+
+      mTotals.SetTrackRecordingEnabled(trackRecordingActive);
+      mTotals.SetCustomCountersEnabled($.gCustomCountersEnabled);
+      mTotals.load(true);
 
       System.println("loadUserSettings loaded");
     } catch (ex) {
@@ -139,8 +153,94 @@ class whattiredApp extends Application.AppBase {
     }
   }
 
+  hidden function conversionToArrays() {
+    // Remove not used fields
+    Storage.deleteValue("showFocusSmallField");
+    Storage.deleteValue("showColors");
+    Storage.deleteValue("showValues");
+    Storage.deleteValue("showLastDistance");
+    Storage.deleteValue("showColorsSmallField");
+    Storage.deleteValue("showDateNumbers");
+    Storage.deleteValue("showOdo");
+    Storage.deleteValue("showYear");
+    Storage.deleteValue("showMonth");
+    Storage.deleteValue("showWeek");
+    Storage.deleteValue("showRide");
+    Storage.deleteValue("showTrack");
+    Storage.deleteValue("showFront");
+    Storage.deleteValue("showBack");
+    Storage.deleteValue("showChain");
+
+    Storage.setValue("show_large_field", [
+      -1,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    Storage.setValue("show_wide_field", [
+      FocusRide,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+    ]);
+    Storage.setValue("show_small_field", [
+      FocusRide,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+    ]);
+  }
 }
 
 function getApp() as whattiredApp {
   return Application.getApp() as whattiredApp;
 }
+
+var gSizeArrShowOptions as Number = 17;
+var gShow_LargeField as Array<Number> = [] as Array<Number>;
+var gShow_WideField as Array<Number> = [] as Array<Number>;
+var gShow_SmallField as Array<Number> = [] as Array<Number>;
+var gCustomCountersEnabled as Boolean = false;
+var gCustomAlert1Units as EnumCustomAlertUnits = CustomAlertDisabled;
+var gCustomAlert2Units as EnumCustomAlertUnits = CustomAlertDisabled;
+var gCustomAlert1Label as String = "Cust1";
+var gCustomAlert2Label as String = "Cust2";

@@ -1,8 +1,24 @@
-use key|idx
+display with decimals smaller font
+TODO fix secondsToHourMinutes and secondsToHourMinutesSeconds for other projects
+Positie profile name -> bottom
 
+Custom alert label -> use tag (first 3) -> show in BAR?
 
 show custom fields / warnings
-- option to reset custom 1 / custom 2
+custom alert - show toast
+warn when x procent to max
+show time values / past values 
+show 1 ipv Cust1 - show label when paused or close to alert.
+
+x remove old storage fields
+
+
+x- option to reset custom 1 / custom 2
+- option to reset to default
+show elapse time / timer line / focus circle
+Track / Focus ascending /descending
+
+
 x- change label / tag DI2 
  - draw perc line now to target  based on km/timer/elapsed
  x- option to show custom 1 , custum 2
@@ -13,7 +29,7 @@ edit minutes
 
 Custom alarm - Charge after x km -> di2 / powermeter / etc. /
 Charge after x hours -> hr / power / etc
-Focus altitude
+
 show per field / one / wide / small
 
 - Custom Alerts per profile (enable for all or current profile)
