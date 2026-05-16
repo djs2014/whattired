@@ -214,25 +214,25 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     if (id instanceof String && id.equals("menuCustomAlerts")) {
-      var customMenu = new WatchUi.Menu2({ :title => "Set custom for" });
-      var pid = $.getProfileId();
+      var customMenu = new WatchUi.Menu2({ :title => "Set counters for" });
+      var custId = $.getProfileId();
 
       var alert1Units =
-          $.getStorageValue("customAlert1Units", CustomAlertDisabled) as
-          EnumCustomAlertUnits;
+        $.getStorageValue("customAlert1Units" + custId, CustomAlertDisabled) as
+        EnumCustomAlertUnits;
       var alert2Units =
-          $.getStorageValue("customAlert2Units", CustomAlertDisabled) as
-          EnumCustomAlertUnits;
-
+        $.getStorageValue("customAlert2Units" + custId, CustomAlertDisabled) as
+        EnumCustomAlertUnits;
 
       var mi;
       var label;
+      var boolean;
 
-      label = $.getStorageValue("text_customAlertLabel1", "Custom alert 1");
+      label = $.getStorageValue("text_customAlertLabel1" + custId, "Cust1");
       mi = new WatchUi.MenuItem(
-        "Label alert 1",
+        "Custom 1",
         null,
-        "text_customAlertLabel1",
+        "text_customAlertLabel1" + custId,
         null
       );
       mi.setSubLabel(label);
@@ -240,28 +240,28 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
       if (alert1Units == CustomAlertDistance) {
         mi = new WatchUi.MenuItem(
-          "Tot distance 1 |. (km/0.001)",
+          "Tot distance |. (km/0.001)",
           null,
-          "totalDistanceCustom1" + pid,
+          "totalDistanceCustom1" + custId,
           null
         );
         mi.setSubLabel($.getDistanceMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
 
         mi = new WatchUi.MenuItem(
-        "Max custom 1 |. (km/0.001)",
-        null,
-        "maxDistanceCustom1" + pid,
-        null
+          "Max distance |. (km/0.001)",
+          null,
+          "maxDistanceCustom1" + custId,
+          null
         );
         mi.setSubLabel($.getDistanceMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
       }
       if (alert1Units == CustomAlertTimer) {
         mi = new WatchUi.MenuItem(
-          "Tot timer 1 |. (min/0.000016667)", // 1/1000/60
+          "Tot timer |. (min/0.000016667)", // 1/1000/60
           null,
-          "totalTimerTimeCustom1" + pid,
+          "totalTimerTimeCustom1" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
@@ -269,33 +269,57 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
       }
       if (alert1Units == CustomAlertElapsed) {
         mi = new WatchUi.MenuItem(
-          "Tot elapsed 1 |. (min/0.000016667)", // 1/1000/60
+          "Tot elapsed |. (min/0.000016667)", // 1/1000/60
           null,
-          "totalElapsedTimeCustom1" + pid,
+          "totalElapsedTimeCustom1" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
-      
       }
-      if (alert1Units == CustomAlertTimer || alert1Units == CustomAlertElapsed) {
+      if (
+        alert1Units == CustomAlertTimer ||
+        alert1Units == CustomAlertElapsed
+      ) {
         mi = new WatchUi.MenuItem(
-          "Max duration 1 |. (min/0.000016667)", // 1/1000/60
+          "Max duration |. (min/0.000016667)", // 1/1000/60
           null,
-          "maxDurationCustom1" + pid,
+          "maxDurationCustom1" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
+      }
+
+      if (alert1Units != CustomAlertDisabled) {
+        mi = new WatchUi.MenuItem(
+          "Autoreset |-1~ (sec)",
+          null,
+          "autoResetCustom1" + custId,
+          null
+        );
+        mi.setSubLabel($.getSecondsMenuSubLabel(mi.getId() as String));
+        customMenu.addItem(mi);
+
+        boolean = $.getStorageValue("alertCustom1" + custId, false) as Boolean;
+        customMenu.addItem(
+          new WatchUi.ToggleMenuItem(
+            "Alert ",
+            null,
+            "alertCustom1" + custId,
+            boolean,
+            null
+          )
+        );
       }
 
       // 2
 
-      label = $.getStorageValue("text_customAlertLabel2", "Custom alert 2");
+      label = $.getStorageValue("text_customAlertLabel2" + custId, "Cust2");
       mi = new WatchUi.MenuItem(
-        "Label alert 2",
+        "Custom 2",
         null,
-        "text_customAlertLabel2",
+        "text_customAlertLabel2" + custId,
         null
       );
       mi.setSubLabel(label);
@@ -303,18 +327,18 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
       if (alert2Units == CustomAlertDistance) {
         mi = new WatchUi.MenuItem(
-          "Tot distance 2 |. (km/0.001)",
+          "Tot distance |. (km/0.001)",
           null,
-          "totalDistanceCustom2" + pid,
+          "totalDistanceCustom2" + custId,
           null
         );
         mi.setSubLabel($.getDistanceMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
 
         mi = new WatchUi.MenuItem(
-          "Max custom 2 |. (km/0.001)",
+          "Max distance |. (km/0.001)",
           null,
-          "maxDistanceCustom2" + pid,
+          "maxDistanceCustom2" + custId,
           null
         );
         mi.setSubLabel($.getDistanceMenuSubLabel(mi.getId() as String));
@@ -323,9 +347,9 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
       if (alert2Units == CustomAlertTimer) {
         mi = new WatchUi.MenuItem(
-          "Tot timer 2 |. (min/0.000016667)", // 1/1000/60
+          "Tot timer |. (min/0.000016667)", // 1/1000/60
           null,
-          "totalTimerTimeCustom2" + pid,
+          "totalTimerTimeCustom2" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
@@ -333,24 +357,49 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
       }
       if (alert2Units == CustomAlertElapsed) {
         mi = new WatchUi.MenuItem(
-          "Tot elapsed 2 |. (min/0.000016667)", // 1/1000/60
+          "Tot elapsed |. (min/0.000016667)", // 1/1000/60
           null,
-          "totalElapsedTimeCustom2" + pid,
+          "totalElapsedTimeCustom2" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
       }
-      
-      if (alert2Units == CustomAlertTimer || alert2Units == CustomAlertElapsed) {
+
+      if (
+        alert2Units == CustomAlertTimer ||
+        alert2Units == CustomAlertElapsed
+      ) {
         mi = new WatchUi.MenuItem(
-          "Max duration 2 |. (min/0.000016667)", // 1/1000/60
+          "Max duration |. (min/0.000016667)", // 1/1000/60
           null,
-          "maxDurationCustom2" + pid,
+          "maxDurationCustom2" + custId,
           null
         );
         mi.setSubLabel($.getDurationMenuSubLabel(mi.getId() as String));
         customMenu.addItem(mi);
+      }
+
+if (alert2Units != CustomAlertDisabled) {
+        mi = new WatchUi.MenuItem(
+          "Autoreset |-1~ (sec)",
+          null,
+          "autoResetCustom2" + custId,
+          null
+        );
+        mi.setSubLabel($.getSecondsMenuSubLabel(mi.getId() as String));
+        customMenu.addItem(mi);
+
+        boolean = $.getStorageValue("alertCustom2" + custId, false) as Boolean;
+        customMenu.addItem(
+          new WatchUi.ToggleMenuItem(
+            "Alert ",
+            null,
+            "alertCustom2" + custId,
+            boolean,
+            null
+          )
+        );
       }
 
       WatchUi.pushView(
@@ -485,14 +534,15 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     if (
+      // Custom Alerts per profile, the profileid is already appended to the menu id!
       id instanceof String &&
-      (id.equals("customAlert1Units") || id.equals("customAlert2Units"))
+      (id.find("customAlert1Units") != null ||
+        id.find("customAlert2Units") != null)
     ) {
       var sp = new selectionMenuPicker(item.getLabel(), id as String);
 
       for (var i = 0; i < 4; i++) {
         sp.add($.getEnumUnitAsString(i as EnumCustomAlertUnits), null, i);
-   
       }
 
       sp.setOnSelected(self, :onSelectedSelection, item);
@@ -520,7 +570,7 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
           -1
         )
       ) {
-        Storage.setValue(storageKey, array);
+        $.StorageSetValue(storageKey, array);
       }
 
       // TODO focus
@@ -673,7 +723,7 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     if (id instanceof String && item instanceof ToggleMenuItem) {
-      Storage.setValue(id as String, item.isEnabled());
+      $.StorageSetValue(id as String, item.isEnabled());
       return;
     }
     // if (WatchUi has :TextPicker) {
@@ -689,7 +739,7 @@ class DataFieldSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     storageKey as String,
     value as Application.PropertyValueType
   ) as Void {
-    Storage.setValue(storageKey, value);
+    $.StorageSetValue(storageKey, value);
   }
 
   hidden function addToggleMenuItem(
@@ -740,19 +790,9 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
       _arrayIndex,
     ]);
 
-    // if (id instanceof String && id.equals("showInfoSmallField")) {
-    //   var sp = new selectionMenuPicker("Small field", id as String);
-    //   for (var i = 0; i <= 5; i++) {
-    //     sp.add($.getShowInfoText(i), null, i);
-    //   }
-    //   sp.setOnSelected(self, :onSelectedSelection, item);
-    //   sp.show();
-    //   return;
-    // }
-
     if (id instanceof String && item instanceof ToggleMenuItem) {
       $.setStorageValueOrArray(id, item.isEnabled());
-      // Storage.setValue(id as String, item.isEnabled());
+      // $.StorageSetValue(id as String, item.isEnabled());
       return;
     }
 
@@ -776,29 +816,19 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
       return;
     }
 
-    // Text input: storage key starts with `text_`
+    // Text input: for storage keys starting with `text_`
     if (id instanceof String && id.find("text_") != null) {
-      // id.equals("customAlertLabel")) {
-
-      // var title = item.getLabel();
-      // var view = new TextPickerView(
-      //   title,
-      //   "Subtitle Text/Info",
-      //   2,
-      //   10,
-      //   ""
-      // );
-      // var textDelegate = new TextPickerDelegate(view);
-      // textDelegate.setOnSelect(self, :onSelectTextinput);
-      // WatchUi.pushView(view, textDelegate, WatchUi.SLIDE_LEFT);
-
-      // TODO update menuitem onselected text
       if (WatchUi has :TextPicker) {
-        //var title = item.getLabel();
         var lastText = $.getStorageValue(id, "");
+        System.println([
+          "Opening TextPicker storagekey",
+          id,
+          "lastText",
+          lastText,
+        ]);
         WatchUi.pushView(
           new WatchUi.TextPicker(lastText),
-          new CustomTextPickerDelegate(id),
+          new CustomTextPickerDelegate(_item, id),
           WatchUi.SLIDE_DOWN
         );
       }
@@ -814,7 +844,7 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     Toybox.WatchUi.pushView(
       view,
-      new $.NumericInputDelegate( view),
+      new $.NumericInputDelegate(view),
       WatchUi.SLIDE_RIGHT
     );
   }
@@ -824,7 +854,7 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
       if (_item != null) {
         var storageKey = _item.getId() as String;
 
-        Storage.setValue(storageKey, value);
+        $.StorageSetValue(storageKey, value);
         (_item as MenuItem).setSubLabel(subLabel);
       }
     } catch (ex) {
@@ -836,7 +866,7 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
       if (_item != null) {
         var storageKey = _item.getId() as String;
 
-        Storage.setValue(storageKey, value);
+        $.StorageSetValue(storageKey, value);
         (_item as MenuItem).setSubLabel(subLabel);
       }
     } catch (ex) {
@@ -883,6 +913,6 @@ class GeneralMenuDelegate extends WatchUi.Menu2InputDelegate {
     value as Application.PropertyValueType
   ) as Void {
     $.setStorageValueOrArray(storageKey, value);
-    //Storage.setValue(storageKey, value);
+    //$.StorageSetValue(storageKey, value);
   }
 }

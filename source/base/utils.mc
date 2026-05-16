@@ -18,8 +18,8 @@ function getStorageValue(
   try {
     // Check if key contains index (for array)
     var idx = stringRight(key, "|", "").toNumber();
-    System.println(["getStorageValue idx", idx]);
     if (idx == null || idx == "") {
+      // System.println(["getStorageValue key", key]);
       var val = Toybox.Application.Storage.getValue(key);
       if (val != null) {
         return val;
@@ -29,7 +29,7 @@ function getStorageValue(
 
     // Get the value from the stored array
     var storageKey = stringLeft(key, "|", key);
-    System.println(["getStorageValue storageKey", storageKey]);
+    // System.println(["getStorageValue storageKey", storageKey]);
     var array = Toybox.Application.Storage.getValue(storageKey);
     if (array != null) {
       if (idx > -1 && idx < array.size()) {
@@ -57,7 +57,7 @@ function setStorageValueOrArray(
   var idx = stringRight(key, "|", "").toNumber();
   System.println(["setStorageValueOrArray storageKey|idx", storageKey, idx]);
   if (idx == null || idx == "") {
-    Storage.setValue(storageKey, value);
+    $.StorageSetValue(storageKey, value);
     return;
   }
 
@@ -69,13 +69,23 @@ function setStorageValueOrArray(
   if (idx > -1 && idx < array.size()) {
     // Update array
     array[idx] = value;
-    Storage.setValue(
+    $.StorageSetValue(
       storageKey,
       array //as Lang.Array<Application.PropertyValueType>
     );
   }
 }
 
+function StorageSetValue(
+  key as Application.PropertyKeyType,
+  value as Application.PropertyValueType
+) as Void {
+  try {
+    Toybox.Application.Storage.setValue(key, value);
+  } catch (ex) {
+    ex.printStackTrace();
+  }
+}
 function getApplicationProperty(
   key as Application.PropertyKeyType,
   dflt as Application.PropertyValueType
@@ -674,7 +684,7 @@ function maxChars(str as String, nrOfChars as Number) as String {
 }
 
 // 1:40 or 150:40 (if no {h} in template)
-function secondsToHourMinutes(totalSeconds as Number) as String {
+function secondsToHourMinutes(totalSeconds as Numeric or Null) as String {
   if (totalSeconds == null) {
     return "";
   }
@@ -694,7 +704,9 @@ function secondsToHourMinutes(totalSeconds as Number) as String {
   return timeString;
 }
 
-function secondsToHourMinutesSeconds(totalSeconds as Number or Float or Long or Null) as String {
+function secondsToHourMinutesSeconds(
+  totalSeconds as Numeric or Null
+) as String {
   if (totalSeconds == null) {
     return "";
   }
@@ -716,4 +728,13 @@ function secondsToHourMinutesSeconds(totalSeconds as Number or Float or Long or 
   timeString = $.stringReplace(timeString, "{s}", seconds.format("%02d"));
 
   return timeString;
+}
+
+// Returns the floating-point remainder of x / y
+function fmod(x as Numeric, y as Numeric) as Numeric {
+    if (y == 0.0) {
+        return y; // Avoid division by zero
+    }
+    // System.println(["fmod x y", x, y, Math.floor(x / y), x - (y * Math.floor(x / y))]);
+    return x - (y * Math.floor(x / y));
 }

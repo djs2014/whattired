@@ -76,40 +76,60 @@ class DataFieldSettingsDelegate extends WatchUi.BehaviorDelegate {
     mi.setSubLabel("Manage distance settings");
     menu.addItem(mi);
 
-    mi = new WatchUi.MenuItem(
-      "Custom alert 1",
-      null,
-      "customAlert1Units",
-      null
-    );
-    value =
-      getStorageValue(mi.getId() as String, CustomAlertDisabled) as
-      EnumCustomAlertUnits;
-    mi.setSubLabel($.getEnumUnitAsString(value));
-    menu.addItem(mi);
-
-    mi = new WatchUi.MenuItem(
-      "Custom alert 2",
-      null,
-      "customAlert2Units",
-      null
-    );
-    value =
-      getStorageValue(mi.getId() as String, CustomAlertDisabled) as
-      EnumCustomAlertUnits;
-    mi.setSubLabel($.getEnumUnitAsString(value));
-    menu.addItem(mi);
-
-    mi = new WatchUi.MenuItem("Custom alerts", null, "menuCustomAlerts", null);
-    mi.setSubLabel("Manage custom alerts");
-    menu.addItem(mi);
-
     mi = new WatchUi.MenuItem("Large field", null, "show_large_field", null);
     menu.addItem(mi);
     mi = new WatchUi.MenuItem("Wide field", null, "show_wide_field", null);
     menu.addItem(mi);
     mi = new WatchUi.MenuItem("Small field", null, "show_small_field", null);
     menu.addItem(mi);
+
+    var customCounters =
+      $.getStorageValue("feat_customCounters", false) as Boolean;
+    menu.addItem(
+      new WatchUi.ToggleMenuItem(
+        "Custom counters",
+        null,
+        "feat_customCounters",
+        customCounters,
+        null
+      )
+    );
+
+    if (customCounters) {
+      var custId = $.getProfileId();
+      mi = new WatchUi.MenuItem(
+        "Custom alert 1",
+        null,
+        "customAlert1Units" + custId,
+        null
+      );
+      value =
+        getStorageValue(mi.getId() as String, CustomAlertDisabled) as
+        EnumCustomAlertUnits;
+      mi.setSubLabel($.getEnumUnitAsString(value));
+      menu.addItem(mi);
+
+      mi = new WatchUi.MenuItem(
+        "Custom alert 2",
+        null,
+        "customAlert2Units" + custId,
+        null
+      );
+      value =
+        getStorageValue(mi.getId() as String, CustomAlertDisabled) as
+        EnumCustomAlertUnits;
+      mi.setSubLabel($.getEnumUnitAsString(value));
+      menu.addItem(mi);
+
+      mi = new WatchUi.MenuItem(
+        "Custom alerts",
+        null,
+        "menuCustomAlerts",
+        null
+      );
+      mi.setSubLabel("Manage custom alerts");
+      menu.addItem(mi);
+    }
 
     WatchUi.pushView(
       menu,
@@ -122,7 +142,7 @@ class DataFieldSettingsDelegate extends WatchUi.BehaviorDelegate {
   public function onBack() as Boolean {
     $.gExitedMenu = true;
     getApp().onSettingsChanged();
-    getApp().triggerFrontBack();
+    getApp().triggerResetsTotal();
     return false;
   }
 }
@@ -134,11 +154,18 @@ function getDistanceMenuSubLabel(key as Application.PropertyKeyType) as String {
     ((getStorageValue(key, 0.0f) as Float) / 1000.0).format("%.2f") + " km"
   );
 }
-// Alwasy in minutes
+// Always in minutes
 function getDurationMenuSubLabel(key as Application.PropertyKeyType) as String {
   return (
     ((getStorageValue(key, 0.0f) as Float) / 1000.0 / 60.0).format("%.2f") +
     " min"
+  );
+}
+
+function getSecondsMenuSubLabel(key as Application.PropertyKeyType) as String {
+  return (
+    ((getStorageValue(key, 0) as Number)).format("%.0d") +
+    " sec"
   );
 }
 

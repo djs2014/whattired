@@ -15,9 +15,9 @@ class Totals {
   private var elapsedAscentActivity as Number = 0;
   private var elapsedDescentActivity as Number = 0;
   private var debugElapsedDistance as Float = 0.0f;
-  // is the time the timer has been actively running (not paused)
+  // is the time the timer has been actively running (not paused) in millisec
   private var timerTimeActivity as Number = 0;
-  // total time of activity inclusive paused
+  // total time of activity inclusive paused in millisec
   private var elapsedTimeActivity as Number = 0;
 
   // odo
@@ -69,12 +69,14 @@ class Totals {
   private var totalElapsedTimeCustom1 as Number = 0; // elapsedtime // msec
   private var maxDistanceCustom1 as Float = 0.0f;
   private var maxDurationCustom1 as Number = 0; // msec
+  private var hasResetLoopCustom1 as Boolean = false;
 
   private var totalDistanceCustom2 as Float = 0.0f;
   private var totalTimerTimeCustom2 as Number = 0;
   private var totalElapsedTimeCustom2 as Number = 0;
   private var maxDistanceCustom2 as Float = 0.0f;
   private var maxDurationCustom2 as Number = 0;
+  private var hasResetLoopCustom2 as Boolean = false;
 
   private var currentProfileId as String? = null;
 
@@ -88,6 +90,7 @@ class Totals {
     return elapsedDistanceActivity + debugElapsedDistance;
   }
 
+  //
   hidden function GetTimerTime() as Number {
     return timerTimeActivity;
   }
@@ -203,12 +206,30 @@ class Totals {
   }
 
   public function GetTotalDistanceCustom1() as Float {
+    // if (hasResetLoopCustom1) {
+    //   return $.fmod(
+    //     totalDistanceCustom1 + GetElapsedDistance(),
+    //     maxDistanceCustom1
+    //   );
+    // }
     return totalDistanceCustom1 + GetElapsedDistance();
   }
   public function GetTotalTimerTimeCustom1() as Number {
+    // if (hasResetLoopCustom1) {
+    //   return $.fmod(
+    //     totalTimerTimeCustom1 + GetTimerTime(),
+    //     maxDurationCustom1
+    //   ).toNumber();
+    // }
     return totalTimerTimeCustom1 + GetTimerTime();
   }
   public function GetTotalElapsedTimeCustom1() as Number {
+    // if (hasResetLoopCustom1) {
+    //   return $.fmod(
+    //     totalElapsedTimeCustom1 + GetElapsedTime(),
+    //     maxDurationCustom1
+    //   ).toNumber();
+    // }
     return totalElapsedTimeCustom1 + GetElapsedTime();
   }
   public function GetMaxDistanceCustom1() as Float {
@@ -219,12 +240,30 @@ class Totals {
   }
 
   public function GetTotalDistanceCustom2() as Float {
+    if (hasResetLoopCustom2) {
+      return $.fmod(
+        totalDistanceCustom2 + GetElapsedDistance(),
+        maxDistanceCustom2
+      );
+    }
     return totalDistanceCustom2 + GetElapsedDistance();
   }
   public function GetTotalTimerTimeCustom2() as Number {
+    if (hasResetLoopCustom2) {
+      return $.fmod(
+        totalTimerTimeCustom2 + GetTimerTime(),
+        maxDurationCustom2
+      ).toNumber();
+    }
     return totalTimerTimeCustom2 + GetTimerTime();
   }
   public function GetTotalElapsedTimeCustom2() as Number {
+    if (hasResetLoopCustom2) {
+      return $.fmod(
+        totalElapsedTimeCustom2 + GetElapsedTime(),
+        maxDurationCustom2
+      ).toNumber();
+    }
     return totalElapsedTimeCustom2 + GetElapsedTime();
   }
   public function GetMaxDistanceCustom2() as Float {
@@ -334,14 +373,39 @@ class Totals {
         totalDistanceToDestination = info.distanceToDestination as Float;
       }
     }
-    // Remeber the distance, when course is started
+    // Remember the distance, when course is started
     if (totalDistanceToDestination == 0.0f) {
       startDistanceCourse = 0.0f;
     } else if (startDistanceCourse == 0.0f) {
       startDistanceCourse = GetElapsedDistance();
     }
+    processCustomCounters();
+    // debugCustom1();
   }
 
+  function processCustomCounters() as Void {
+    if (!customCountersEnabled) {
+      return;
+    }
+    if (
+      hasResetLoopCustom1 &&
+      totalDistanceCustom1 + GetElapsedDistance() > maxDistanceCustom1
+    ) {
+      totalDistanceCustom1 = totalDistanceCustom1 - maxDistanceCustom1;
+    }
+    if (
+      hasResetLoopCustom1 &&
+      totalTimerTimeCustom1 + GetTimerTime() > maxDurationCustom1
+    ) {
+      totalTimerTimeCustom1 = totalTimerTimeCustom1 - maxDurationCustom1;
+    }
+    if (
+      hasResetLoopCustom1 &&
+      totalElapsedTimeCustom1 + GetElapsedTime() > maxDurationCustom1
+    ) {
+      totalElapsedTimeCustom1 = totalElapsedTimeCustom1 - maxDurationCustom1;
+    }
+  }
   function save(loadValues as Boolean) as Void {
     try {
       setDistanceAsMeters(
@@ -399,17 +463,17 @@ class Totals {
   }
 
   function saveYear() as Void {
-    Toybox.Application.Storage.setValue("lastYear", lastYear);
+    $.StorageSetValue("lastYear", lastYear);
     setDistanceAsMeters("totalDistanceLastYear", totalDistanceLastYear);
 
-    Toybox.Application.Storage.setValue("currentYear", currentYear);
+    $.StorageSetValue("currentYear", currentYear);
     setDistanceAsMeters(
       "totalDistanceYear",
       totalDistanceYear + GetElapsedDistance()
     );
   }
   function saveMonth() as Void {
-    Toybox.Application.Storage.setValue("currentMonth", currentMonth);
+    $.StorageSetValue("currentMonth", currentMonth);
     setDistanceAsMeters("totalDistanceLastMonth", totalDistanceLastMonth);
     setDistanceAsMeters(
       "totalDistanceMonth",
@@ -417,7 +481,7 @@ class Totals {
     );
   }
   function saveWeek() as Void {
-    Toybox.Application.Storage.setValue("currentWeek", currentWeek);
+    $.StorageSetValue("currentWeek", currentWeek);
     setDistanceAsMeters("totalDistanceLastWeek", totalDistanceLastWeek);
     setDistanceAsMeters(
       "totalDistanceWeek",
@@ -442,13 +506,13 @@ class Totals {
       totalDistanceTrack + GetElapsedDistance()
     );
 
-    Storage.setValue("totalAscentLastTrack", totalAscentLastTrack);
-    Storage.setValue(
+    $.StorageSetValue("totalAscentLastTrack", totalAscentLastTrack);
+    $.StorageSetValue(
       "totalAscentTrack",
       totalAscentTrack + elapsedAscentActivity
     );
-    Storage.setValue("totalDescentLastTrack", totalDescentLastTrack);
-    Storage.setValue(
+    $.StorageSetValue("totalDescentLastTrack", totalDescentLastTrack);
+    $.StorageSetValue(
       "totalDescentTrack",
       totalDescentTrack + elapsedDescentActivity
     );
@@ -462,32 +526,32 @@ class Totals {
     var pid = $.getProfileId();
     setDistanceAsMeters(
       "totalDistanceCustom1" + pid,
-      totalDistanceCustom1 + GetElapsedDistance()
+      GetTotalDistanceCustom1()
     );
 
     setDurationAsMillisec(
       "totalTimerTimeCustom1" + pid,
-      totalTimerTimeCustom1 + GetTimerTime()
+      GetTotalTimerTimeCustom1()
     );
 
     setDurationAsMillisec(
       "totalElapsedTimeCustom1" + pid,
-      totalElapsedTimeCustom1 + GetElapsedTime()
+      GetTotalElapsedTimeCustom1()
     );
 
     setDistanceAsMeters(
       "totalDistanceCustom2" + pid,
-      totalDistanceCustom2 + GetElapsedDistance()
+      GetTotalDistanceCustom2()
     );
 
     setDurationAsMillisec(
       "totalTimerTimeCustom2" + pid,
-      totalTimerTimeCustom2 + GetTimerTime()
+      GetTotalTimerTimeCustom2()
     );
 
     setDurationAsMillisec(
       "totalElapsedTimeCustom2" + pid,
-      totalElapsedTimeCustom2 + GetElapsedTime()
+      GetTotalElapsedTimeCustom2()
     );
   }
 
@@ -628,7 +692,7 @@ class Totals {
     maxDurationCustom2 = getDurationAsMillisec("maxDurationCustom2" + pid);
   }
 
-  function triggerFrontBack() as Void {
+  function triggerResetsTotal() as Void {
     var trp = $.getTireRecPostfix();
     var switchFB = $.getStorageValue("switch_front_back", false) as Boolean;
 
@@ -643,7 +707,7 @@ class Totals {
     var reset = $.getStorageValue("reset_front", false) as Boolean;
     if (reset) {
       totalDistanceFrontTyre = 0.0f;
-      Storage.setValue("reset_front", false);
+      $.StorageSetValue("reset_front", false);
       if (!switchFB) {
         setDistanceAsMeters(
           "totalDistanceFrontTyre" + trp,
@@ -655,7 +719,7 @@ class Totals {
     reset = $.getStorageValue("reset_back", false) as Boolean;
     if (reset) {
       totalDistanceBackTyre = 0.0f;
-      Storage.setValue("reset_back", false);
+      $.StorageSetValue("reset_back", false);
       if (!switchFB) {
         setDistanceAsMeters(
           "totalDistanceBackTyre" + trp,
@@ -665,7 +729,7 @@ class Totals {
     }
 
     if (switchFB) {
-      Storage.setValue("switch_front_back", false);
+      $.StorageSetValue("switch_front_back", false);
       var tmpBack = totalDistanceBackTyre;
       totalDistanceBackTyre = totalDistanceFrontTyre;
       totalDistanceFrontTyre = tmpBack;
@@ -681,7 +745,7 @@ class Totals {
     if (reset) {
       totalDistanceChain = 0.0f;
       setDistanceAsMeters("totalDistanceChain" + cr, totalDistanceChain);
-      Storage.setValue("reset_chain", false);
+      $.StorageSetValue("reset_chain", false);
     }
 
     reset = $.getStorageValue("reset_track", false) as Boolean;
@@ -695,7 +759,7 @@ class Totals {
       totalAscentTrack = 0;
       totalDescentTrack = 0;
       saveTrack();
-      Storage.setValue("reset_track", false);
+      $.StorageSetValue("reset_track", false);
     }
 
     reset = $.getStorageValue("reset_custom1", false) as Boolean;
@@ -704,7 +768,7 @@ class Totals {
       totalTimerTimeCustom1 = 0;
       totalElapsedTimeCustom1 = 0;
       saveCustom();
-      Storage.setValue("reset_custom1", false);
+      $.StorageSetValue("reset_custom1", false);
     }
 
     reset = $.getStorageValue("reset_custom2", false) as Boolean;
@@ -713,8 +777,15 @@ class Totals {
       totalTimerTimeCustom2 = 0;
       totalElapsedTimeCustom2 = 0;
       saveCustom();
-      Storage.setValue("reset_custom2", false);
+      $.StorageSetValue("reset_custom2", false);
     }
+  }
+
+  function setResetLoopCustom1(enabled as Boolean) as Void {
+    hasResetLoopCustom1 = enabled;
+  }
+  function setResetLoopCustom2(enabled as Boolean) as Void {
+    hasResetLoopCustom2 = enabled;
   }
 
   hidden function setDistanceAsMeters(
@@ -722,7 +793,7 @@ class Totals {
     distanceMeters as Float
   ) as Void {
     try {
-      Storage.setValue(key, distanceMeters);
+      $.StorageSetValue(key, distanceMeters);
     } catch (ex) {
       ex.printStackTrace();
     }
@@ -743,7 +814,7 @@ class Totals {
   ) as Void {
     try {
       //var minutes = durationMillisec / factorMSecToSec;
-      Storage.setValue(key, durationMillisec);
+      $.StorageSetValue(key, durationMillisec);
     } catch (ex) {
       ex.printStackTrace();
     }
@@ -855,6 +926,34 @@ class Totals {
   // hidden function setProperty(key as PropertyKeyType, value as PropertyValueType) as Void {
   //   Application.Properties.setValue(key, value);
   // }
+
+  function debugCustom1() as Void {
+    var timerString = $.secondsToHourMinutesSeconds(
+      totalTimerTimeCustom1 / 1000
+    );
+    var elapsedString = $.secondsToHourMinutesSeconds(
+      totalElapsedTimeCustom1 / 1000
+    );
+
+    var maxDurationString = $.secondsToHourMinutesSeconds(
+      maxDurationCustom1 / 1000
+    );
+
+    System.println(
+      Lang.format(
+        "cust1: totalDist [$1$] reset [$2$] maxDist [$3$] maxDur [$4$] timer [$5$] elapsed [$6$] maxDur [$7$]",
+        [
+          totalDistanceCustom1,
+          hasResetLoopCustom1,
+          maxDistanceCustom1,
+          maxDurationCustom1,
+          timerString,
+          elapsedString,
+          maxDurationString,
+        ]
+      )
+    );
+  }
 }
 
 class Total {
@@ -869,15 +968,15 @@ function getTireRecPostfix() as String {
     // case TireRecDefault:
     //   return "";
     case TireRecProfile:
-      var info = Activity.getProfileInfo();
-      if (info == null) {
-        return $.gActivityProfileId;
-      }
-      var arr = info.uniqueIdentifier;
-      if (arr == null) {
-        return $.gActivityProfileId;
-      }
-      $.gActivityProfileId = arr.toString();
+      // var info = Activity.getProfileInfo();
+      // if (info == null) {
+      //   return $.gActivityProfileId;
+      // }
+      // var arr = info.uniqueIdentifier;
+      // if (arr == null) {
+      //   return $.gActivityProfileId;
+      // }
+      $.gActivityProfileId = $.getProfileId();
       return $.gActivityProfileId;
     case TireRecSetA:
       return "A";

@@ -29,6 +29,7 @@ class whattiredView extends WatchUi.DataField {
 
   var mNightMode as Boolean = false;
   var mColor as ColorType = Graphics.COLOR_BLACK;
+  var mColorDecimals as ColorType = Graphics.COLOR_BLACK;
   var mColorTextNoFocus as ColorType = Graphics.COLOR_DK_GRAY;
   var mColorValues as ColorType = Graphics.COLOR_BLACK;
   var mColorValuesPerc20 as ColorType = Graphics.COLOR_BLACK;
@@ -64,10 +65,19 @@ class whattiredView extends WatchUi.DataField {
   var mPaused as Boolean = false;
 
   var mShowFBCCircles as Boolean = false;
+  var mCurrentProfileId as String = "";
+  var mAlert1Handled as Boolean = false;
+  var mAlert2Handled as Boolean = false;
+  var mAlert1Counter as Number = -1;
+  var mAlert2Counter as Number = -1;
+  // var mAlert1Current as Numeric = 0; 
+  // var mAlert2Current as Numeric = 0;
+  hidden var mToastIcon as BitmapResource?;
 
   function initialize() {
     DataField.initialize();
     mTotals = getApp().mTotals;
+    mCurrentProfileId = $.getProfileId();
     checkFeatures();
   }
 
@@ -103,7 +113,7 @@ class whattiredView extends WatchUi.DataField {
     } else if (mWideField) {
       arrShowField = $.gShow_WideField;
     }
-    System.println(["onlayout", arrShowField]);
+    // System.println(["onlayout", arrShowField]);
 
     mFocus = arrShowField[0] as EnumFocus;
     mShowOdo = arrShowField[1] == true;
@@ -116,8 +126,10 @@ class whattiredView extends WatchUi.DataField {
     mShowFront = arrShowField[8] == true;
     mShowBack = arrShowField[9] == true;
     mShowChain = arrShowField[10] == true;
-    mShowCustom1 = arrShowField[11] == true;
-    mShowCustom2 = arrShowField[12] == true;
+    mShowCustom1 =
+      arrShowField[11] == true && $.gCustomAlert1Units != CustomAlertDisabled;
+    mShowCustom2 =
+      arrShowField[12] == true && $.gCustomAlert2Units != CustomAlertDisabled;
     mShowColors = arrShowField[13] == true;
     mShowValues = arrShowField[14] == true;
     mShowPreviousValues = arrShowField[15] == true;
@@ -205,8 +217,14 @@ class whattiredView extends WatchUi.DataField {
   }
 
   function compute(info as Activity.Info) as Void {
-    // TODO: if switch profile -> load totals but do not save!
-
+    if (!mCurrentProfileId.equals($.getProfileId())) {
+      mCurrentProfileId = $.getProfileId();
+      System.println("Profile changed, new profileId: " + mCurrentProfileId);
+      var enabled = $.loadCustomCountersProfileId(mCurrentProfileId);
+      mTotals.SetCustomCountersEnabled(enabled);
+      mTotals.setResetLoopCustom1($.gCustomAlert1ResetSec > -1);
+      mTotals.setResetLoopCustom2($.gCustomAlert2ResetSec > -1);
+    }
     mTotals.compute(info);
 
     // not always onTimerStop and onTimerReset is executed (??)
@@ -224,6 +242,8 @@ class whattiredView extends WatchUi.DataField {
           info.timerState == Activity.TIMER_STATE_OFF;
       }
     }
+
+    processCustomAlerts();
   }
 
   function saveTotals(info as String) as Void {
@@ -248,11 +268,13 @@ class whattiredView extends WatchUi.DataField {
 
     if (mNightMode) {
       mColor = Graphics.COLOR_WHITE;
+      mColorDecimals = Graphics.COLOR_LT_GRAY;
       mColorValues = Graphics.COLOR_WHITE;
       mColorValuesPerc20 = Graphics.COLOR_WHITE;
       mColorTextNoFocus = Graphics.COLOR_WHITE;
     } else {
       mColor = Graphics.COLOR_BLACK;
+      mColorDecimals = Graphics.COLOR_DK_GRAY;
       mColorValues = Graphics.COLOR_BLACK;
       mColorValuesPerc20 = Graphics.COLOR_BLACK;
       mColorTextNoFocus = Graphics.COLOR_DK_GRAY;
@@ -389,27 +411,6 @@ class whattiredView extends WatchUi.DataField {
       }
     }
 
-    if (mShowFBCCircles) {
-      //} && focus != FocusFront && focus != FocusBack) {
-      var fbcHeight = DrawDistanceCirclesFrontBackChain(
-        dc,
-        line,
-        mShowValues,
-        mShowColors,
-        nothingHasFocus
-      );
-      line = line + fbcHeight;
-    } else if (mShowFront || mShowBack || mShowChain) {
-      DrawDistanceFrontBackTyreChain(
-        dc,
-        line,
-        mShowValues,
-        mShowColors,
-        nothingHasFocus
-      );
-      line = line + 1;
-    }
-
     // TODO show timer / elapsed time
     if (mShowCustom1 && focus != FocusCustom1) {
       if ($.gCustomAlert1Units == CustomAlertDistance) {
@@ -484,6 +485,27 @@ class whattiredView extends WatchUi.DataField {
         );
       }
 
+      line = line + 1;
+    }
+
+    if (mShowFBCCircles) {
+      //} && focus != FocusFront && focus != FocusBack) {
+      var fbcHeight = DrawDistanceCirclesFrontBackChain(
+        dc,
+        line,
+        mShowValues,
+        mShowColors,
+        nothingHasFocus
+      );
+      line = line + fbcHeight;
+    } else if (mShowFront || mShowBack || mShowChain) {
+      DrawDistanceFrontBackTyreChain(
+        dc,
+        line,
+        mShowValues,
+        mShowColors,
+        nothingHasFocus
+      );
       line = line + 1;
     }
 
@@ -623,11 +645,11 @@ class whattiredView extends WatchUi.DataField {
             true,
             true
           );
-        } else if ($.gCustomAlert1Units == CustomAlertDistance) {
+        } else if ($.gCustomAlert1Units == CustomAlertTimer) {
           drawTimeCircle(
             dc,
             $.gCustomAlert1Label,
-            mTotals.GetTotalTimerTimeCustom1() / 1000,
+            mTotals.GetTotalTimerTimeCustom1() / 1000, // in millisec, convert to sec
             mTotals.GetMaxDurationCustom1() / 1000,
             true,
             true
@@ -645,7 +667,7 @@ class whattiredView extends WatchUi.DataField {
 
         break;
       case FocusCustom2:
-        if ($.gCustomAlert1Units == CustomAlertDistance) {
+        if ($.gCustomAlert2Units == CustomAlertDistance) {
           drawDistanceCircle(
             dc,
             $.gCustomAlert2Label,
@@ -654,12 +676,12 @@ class whattiredView extends WatchUi.DataField {
             true,
             true
           );
-        } else if ($.gCustomAlert1Units == CustomAlertDistance) {
+        } else if ($.gCustomAlert2Units == CustomAlertTimer) {
           drawTimeCircle(
             dc,
             $.gCustomAlert2Label,
-            mTotals.GetTotalTimerTimeCustom2(),
-            mTotals.GetMaxDurationCustom2(),
+            mTotals.GetTotalTimerTimeCustom2() / 1000,
+            mTotals.GetMaxDurationCustom2() / 1000,
             true,
             true
           );
@@ -667,8 +689,8 @@ class whattiredView extends WatchUi.DataField {
           drawTimeCircle(
             dc,
             $.gCustomAlert2Label,
-            mTotals.GetTotalElapsedTimeCustom2(),
-            mTotals.GetMaxDurationCustom2(),
+            mTotals.GetTotalElapsedTimeCustom2() / 1000,
+            mTotals.GetMaxDurationCustom2() / 1000,
             true,
             true
           );
@@ -694,7 +716,7 @@ class whattiredView extends WatchUi.DataField {
     var abbreviated = details[1];
     var info = details[2];
 
-    if (nothingHasFocus) {
+    if (nothingHasFocus || mPaused) {
       dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
       dc.drawText(x, y, mFontText, label, Graphics.TEXT_JUSTIFY_LEFT);
       x = x + mLabelWidth;
@@ -708,7 +730,7 @@ class whattiredView extends WatchUi.DataField {
 
     var units = getUnits(distanceInMeters);
     var value = getDistanceInMeterOrKm(distanceInMeters);
-    var formattedValue = getNumberString(value, distanceInMeters);
+    var currentValue = getNumberString(value, distanceInMeters);
 
     var perc = -1;
     if (lastDistanceInMeters > 0) {
@@ -742,29 +764,29 @@ class whattiredView extends WatchUi.DataField {
         x,
         y,
         mFontText,
-        formattedValue + " " + units,
+        currentValue + " " + units,
         Graphics.TEXT_JUSTIFY_LEFT
       );
 
       // draw perc last distance
+      var previousValue = "";
       if (perc > -1) {
-        formattedValue = "";
         if (perc >= 130 && showColors) {
           dc.setColor(mColorValuesPerc100, Graphics.COLOR_TRANSPARENT);
         }
         if (mShowPreviousValues) {
           // units = getUnits(lastDistanceInMeters); Same unit as first value.
           value = getDistanceInMeterOrKm(lastDistanceInMeters);
-          formattedValue = getNumberString(value, distanceInMeters); // + " " + units;
+          previousValue = getNumberString(value, distanceInMeters); // + " " + units;
         } else {
-          formattedValue = perc.format("%d") + "%";
+          previousValue = perc.format("%d") + "%";
         }
 
         dc.drawText(
           mWidth - 1,
           y,
           mFontText,
-          formattedValue,
+          previousValue,
           Graphics.TEXT_JUSTIFY_RIGHT
         );
       }
@@ -791,7 +813,7 @@ class whattiredView extends WatchUi.DataField {
     var abbreviated = details[1];
     var info = details[2];
 
-    if (nothingHasFocus) {
+    if (nothingHasFocus || mPaused) {
       dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
       dc.drawText(x, y, mFontText, label, Graphics.TEXT_JUSTIFY_LEFT);
       x = x + mLabelWidth;
@@ -803,7 +825,7 @@ class whattiredView extends WatchUi.DataField {
       // showColors = true;
     }
 
-    var formattedValue = $.secondsToHourMinutesSeconds(timeInSeconds);
+    var currentValue = $.secondsToHourMinutesSeconds(timeInSeconds);
 
     var perc = -1;
     if (maxTimeInSeconds > 0) {
@@ -837,27 +859,31 @@ class whattiredView extends WatchUi.DataField {
         x,
         y,
         mFontText,
-        formattedValue, // + " " + units,
+        currentValue, // + " " + units,
         Graphics.TEXT_JUSTIFY_LEFT
       );
 
       // draw perc last distance
+      var previousValue = "";
       if (perc > -1) {
-        formattedValue = "";
         if (perc >= 130 && showColors) {
           dc.setColor(mColorValuesPerc100, Graphics.COLOR_TRANSPARENT);
         }
         if (mShowPreviousValues) {
-          formattedValue = $.secondsToHourMinutes(maxTimeInSeconds);
+          if (maxTimeInSeconds < 60) {
+            previousValue = $.secondsToHourMinutesSeconds(maxTimeInSeconds);
+          } else {
+            previousValue = $.secondsToHourMinutes(maxTimeInSeconds);
+          }
         } else {
-          formattedValue = perc.format("%d") + "%";
+          previousValue = perc.format("%d") + "%";
         }
 
         dc.drawText(
           mWidth - 1,
           y,
           mFontText,
-          formattedValue,
+          previousValue,
           Graphics.TEXT_JUSTIFY_RIGHT
         );
       }
@@ -1435,26 +1461,31 @@ class whattiredView extends WatchUi.DataField {
         drawPercentageCircleTarget(dc, x, y, radius, perc, circleWidth, null);
       }
     }
-
     if (showValues) {
-      var mFontFitted =
-        getMatchingFont(
-          dc,
-          mFonts,
-          dc.getWidth(),
+      // drawSplitDecimal(dc, "281.23" , mColor, mColorDecimals);
+      if (distanceInMeters < 1000) {
+        var mFontFitted =
+          $.getMatchingFont(
+            dc,
+            mFonts,
+            dc.getWidth(),
+            formattedValue,
+            mFonts.size() - 1
+          ) as FontType;
+
+        dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+          x,
+          y,
+          mFontFitted,
           formattedValue,
-          mFonts.size() - 1
-        ) as FontType;
+          Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
+        );
+      } else {
+        drawSplitDecimal(dc, formattedValue, mColor, mColorDecimals);
+      }
 
-      dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
-      dc.drawText(
-        x,
-        y,
-        mFontFitted,
-        formattedValue,
-        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-      );
-
+      // Show label right under the numbers.
       dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
       dc.drawText(
         x,
@@ -1494,7 +1525,7 @@ class whattiredView extends WatchUi.DataField {
 
     if (showValues) {
       var mFontFitted =
-        getMatchingFont(
+        $.getMatchingFont(
           dc,
           mFonts,
           dc.getWidth(),
@@ -1511,18 +1542,12 @@ class whattiredView extends WatchUi.DataField {
         Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
       );
 
-// TODO show seconds in smaller font
-// secondsPart
-// Show label right under the numbers.
-// TODO fix position/size block of front/chain/back
-// or if focusfield -> toon geen text.
-
       dc.setColor(mColor, Graphics.COLOR_TRANSPARENT);
       dc.drawText(
         x,
         mHeight - mLineHeight - 2,
         mFontText,
-        label, // + " in " + units,
+        label,
         Graphics.TEXT_JUSTIFY_CENTER
       );
     }
@@ -1623,5 +1648,227 @@ class whattiredView extends WatchUi.DataField {
       return "%.2f";
     }
     return "%.2f";
+  }
+
+  // Draw number.decimals in center of field
+  function drawSplitDecimal(
+    dc as Dc,
+    value as String,
+    colorWhole as ColorType,
+    colorDecimal as ColorType
+  ) as Void {
+    var stringValue = value;
+    var width = dc.getWidth();
+    var height = dc.getHeight();
+
+    // 2. Split 10.30 into whole and decimal parts
+    var wholePart = stringValue;
+    var decimalPart = "0";
+    var dotIndex = stringValue.find(".");
+    if (dotIndex != null) {
+      wholePart = stringValue.substring(0, dotIndex); // "10"
+      decimalPart = stringValue.substring(dotIndex, stringValue.length()); // ".30"
+    }
+
+    var mainFont =
+      $.getMatchingFont(dc, mFonts, width, wholePart, mFonts.size() - 1) as
+      FontType;
+
+    if (decimalPart.equals("0")) {
+      // No decimal part, just draw the whole part with the main font
+      dc.setColor(colorWhole, Graphics.COLOR_TRANSPARENT);
+      dc.drawText(
+        width / 2,
+        height / 2,
+        mainFont,
+        wholePart,
+        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
+      );
+      return;
+    }
+
+    var dimsWholePart = dc.getTextDimensions(wholePart, mainFont);
+    var widthWholePart = dimsWholePart[0];
+    var heightWholePart = dimsWholePart[1];
+    // Start looking for a smaller font from the one used for the whole part
+    var idxFontStart = mFonts.indexOf(mainFont) - 1;
+    var decimalFont =
+      $.getMatchingFont(
+        dc,
+        mFonts,
+        width - widthWholePart, // Remaining width after drawing whole part
+        decimalPart,
+        idxFontStart >= 0 ? idxFontStart : 0
+      ) as FontType;
+    var dimsDecimalPart = dc.getTextDimensions(decimalPart, decimalFont);
+    var widthDecimalPart = dimsDecimalPart[0];
+    var heightDecimalPart = dimsDecimalPart[1];
+
+    // Point between whole and decimal part, `~centered` in field
+    var xSplit =
+      (width - widthWholePart - widthDecimalPart) / 2 + widthWholePart;
+    var yBase = height / 2 - heightWholePart / 2;
+
+    dc.setColor(colorWhole, Graphics.COLOR_TRANSPARENT);
+    dc.drawText(
+      xSplit,
+      yBase,
+      mainFont,
+      wholePart,
+      Graphics.TEXT_JUSTIFY_RIGHT
+    );
+
+    var yDec =
+      yBase +
+      heightWholePart -
+      heightDecimalPart -
+      Graphics.getFontDescent(mainFont) +
+      Graphics.getFontDescent(decimalFont);
+
+    dc.setColor(colorDecimal, Graphics.COLOR_TRANSPARENT);
+    dc.drawText(
+      xSplit,
+      yDec,
+      decimalFont,
+      decimalPart,
+      Graphics.TEXT_JUSTIFY_LEFT
+    );
+  }
+
+  hidden function processCustomAlerts() as Void {
+    if (
+      $.gCustomAlert1Units == CustomAlertDisabled &&
+      $.gCustomAlert2Units == CustomAlertDisabled
+    ) {
+      return;
+    }
+
+    // Check if alert 1 or 2 is reached. If modulo reset logic enabled (resetloop) the value will never be greater than the max. 
+    // Fix: Check a little bit before the max value (1 meter or 1 second) to trigger the alert and start the reset logic.
+    if ($.gCustomAlert1Units != CustomAlertDisabled) {
+      var alert1Reached = false;
+
+      if ($.gCustomAlert1Units == CustomAlertDistance) {
+        alert1Reached =
+          mTotals.GetMaxDistanceCustom1() > 0 &&
+          mTotals.GetTotalDistanceCustom1() >= (mTotals.GetMaxDistanceCustom1() - 1); // 1 meter before max.
+      } else if ($.gCustomAlert1Units == CustomAlertTimer) {
+        alert1Reached =
+          mTotals.GetMaxDurationCustom1() > 0 &&
+          mTotals.GetTotalTimerTimeCustom1() >= (mTotals.GetMaxDurationCustom1() - 1000); // 1 second before max
+      } else {
+        alert1Reached =
+          mTotals.GetMaxDurationCustom1() > 0 &&
+          mTotals.GetTotalElapsedTimeCustom1() >= (mTotals.GetMaxDurationCustom1() - 1000); // 1 second before max
+      }
+      if ($.gCustomAlert1Alert && alert1Reached && !mAlert1Handled) {
+        mAlert1Handled = true;
+        System.println("Custom Alert 1 reached: " + $.gCustomAlert1Label);
+        processToastMessage($.gCustomAlert1Label);
+        //
+      }
+
+      // System.println(
+      //  ["Custom Alert 1 check: reached=",
+      //   alert1Reached,
+      //   " handled=",
+      //   mAlert1Handled,
+      //   " resetSec=",
+      //   $.gCustomAlert1ResetSec,
+      //   " counter=",
+      //   mAlert1Counter]
+      // );
+      // First trigger: alert1Reached = true, 
+      // Next seconds: alert1Reached = false (because of restting the mTotals value), 
+      //but counter is running until resetSec is reached
+      if ((alert1Reached || mAlert1Counter > -1) && $.gCustomAlert1ResetSec > -1) {
+        if (mAlert1Counter <= -1) {
+          mAlert1Counter = $.gCustomAlert1ResetSec;
+        } else if (mAlert1Counter > 0) {
+          mAlert1Counter = mAlert1Counter - 1;
+        }
+        // System.println(
+        //   "Custom Alert 1 reached, counter: " +
+        //     mAlert1Counter +
+        //     " sec left to reset."
+        // );
+        if (mAlert1Counter == 0) {
+          mAlert1Counter = -1;
+          mAlert1Handled = false;
+          System.println("Custom Alert 1 reached.");
+        }
+      }
+    }
+
+    if ($.gCustomAlert2Units != CustomAlertDisabled) {
+      var alert2Reached = false;
+
+      if ($.gCustomAlert2Units == CustomAlertDistance) {
+        alert2Reached =
+          mTotals.GetMaxDistanceCustom2() > 0 &&
+          mTotals.GetTotalDistanceCustom2() >= (mTotals.GetMaxDistanceCustom2() - 10.0); // 10 meters before max.
+      } else if ($.gCustomAlert2Units == CustomAlertTimer) {
+        alert2Reached =
+          mTotals.GetMaxDurationCustom2() > 0 &&
+          mTotals.GetTotalTimerTimeCustom2() >= (mTotals.GetMaxDurationCustom2() - 1000); // 1 second before max
+      } else {
+        alert2Reached =
+          mTotals.GetMaxDurationCustom2() > 0 &&
+          mTotals.GetTotalElapsedTimeCustom2() >= (mTotals.GetMaxDurationCustom2() - 1000); // 1 second before max
+      }
+      if ($.gCustomAlert2Alert && alert2Reached && !mAlert2Handled) {
+        mAlert2Handled = true;
+        System.println("Custom Alert 2 reached: " + $.gCustomAlert2Label);
+        processToastMessage($.gCustomAlert2Label);
+        //
+      }
+
+      // System.println(
+      //  ["Custom Alert 2 check: reached=",
+      //   alert2Reached,
+      //   " handled=",
+      //   mAlert2Handled,
+      //   " resetSec=",
+      //   $.gCustomAlert2ResetSec,
+      //   " counter=",
+      //   mAlert2Counter]
+      // );
+      // First trigger: alert2Reached = true, 
+      // Next seconds: alert2Reached = false (because of restting the mTotals value), 
+      //but counter is running until resetSec is reached
+      if ((alert2Reached || mAlert2Counter > -1) && $.gCustomAlert2ResetSec > -1) {
+        if (mAlert2Counter <= -1) {
+          mAlert2Counter = $.gCustomAlert2ResetSec;
+        } else if (mAlert2Counter > 0) {
+          mAlert2Counter = mAlert2Counter - 1;
+        }
+        // System.println(
+        //   "Custom Alert 2 reached, counter: " +
+        //     mAlert2Counter +
+        //     " sec left to reset."
+        // );
+        if (mAlert2Counter == 0) {
+          mAlert2Counter = -1;
+          mAlert2Handled = false;
+          System.println("Custom Alert 2 reached.");
+        }
+      }
+    }
+  }
+
+  function processToastMessage(label as String) as Void {
+    if (!(WatchUi has :showToast)) {
+      return;
+    }
+
+    var options = null;
+    if (mToastIcon == null) {
+      mToastIcon =
+        Application.loadResource(Rez.Drawables.alertIcon) as BitmapResource;
+      options = { :icon => mToastIcon };
+    }
+
+    var message = Lang.format("Alert `$1$`.", [label]);
+    WatchUi.showToast(message, options);
   }
 }
