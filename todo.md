@@ -1,3 +1,27 @@
+TODO fix secondsToHourMinutes and secondsToHourMinutesSeconds for other projects
+TODO: cust alarm per profile enabled / mode /etc -- handle profile switch TEST it
+Custom alarm - Charge after x km -> di2 / powermeter / etc. /
+Charge after x hours -> hr / power / etc
+
+todo optimize calcuations.
+
+
+- Custom Alerts per profile (enable for all or current profile)
+  1 DI2
+  unit km / hour elapsed distance/elapsed time
+  current
+  max / every 2000 
+  
+  2 Power
+  unit km / hour
+  current 
+  max / every 80 -> on every == auto reset ?==> nope no every -> custom action to reset
+
+
+
+TODO: remove TireRecDefault -> or change to TireRecAllTogether -> useless?
+bug - switch profile totals
+- then do not save when swithcing profile (old value != new profile name)
 dark bg -> bars gray 
 
 bug in simulator -- @@TODO check on device

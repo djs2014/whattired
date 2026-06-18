@@ -10,14 +10,31 @@ const FEET = 3.281;
 var gCreateColors as Boolean = false;
 var gUseSetFillStroke as Boolean = false;
 
+// Note key contains `storageKey|index` or `storageKey`
 function getStorageValue(
   key as Application.PropertyKeyType,
   dflt as Application.PropertyValueType
 ) as Application.PropertyValueType {
   try {
-    var val = Toybox.Application.Storage.getValue(key);
-    if (val != null) {
-      return val;
+    // Check if key contains index (for array)
+    var idx = stringRight(key, "|", "").toNumber();
+    if (idx == null || idx == "") {
+      // System.println(["getStorageValue key", key]);
+      var val = Toybox.Application.Storage.getValue(key);
+      if (val != null) {
+        return val;
+      }
+      return dflt;
+    }
+
+    // Get the value from the stored array
+    var storageKey = stringLeft(key, "|", key);
+    // System.println(["getStorageValue storageKey", storageKey]);
+    var array = Toybox.Application.Storage.getValue(storageKey);
+    if (array != null) {
+      if (idx > -1 && idx < array.size()) {
+        return array[idx];
+      }
     }
   } catch (ex) {
     return dflt;
@@ -25,6 +42,50 @@ function getStorageValue(
   return dflt;
 }
 
+// Save a number value in array and save to storage
+// Note key contains `storageKey|index` or `storageKey`
+function setStorageValueOrArray(
+  key as String,
+  value as Application.PropertyValueType
+) as Void {
+  if (key == "") {
+    return;
+  }
+
+  // Extract selected storage key and index
+  var storageKey = stringLeft(key, "|", key);
+  var idx = stringRight(key, "|", "").toNumber();
+  System.println(["setStorageValueOrArray storageKey|idx", storageKey, idx]);
+  if (idx == null || idx == "") {
+    $.StorageSetValue(storageKey, value);
+    return;
+  }
+
+  System.println(["setStorageValueArray:", storageKey, idx, value]);
+
+  // Get current array
+  var array =
+    getStorageValue(storageKey, []) as Array<Application.PropertyValueType>;
+  if (idx > -1 && idx < array.size()) {
+    // Update array
+    array[idx] = value;
+    $.StorageSetValue(
+      storageKey,
+      array //as Lang.Array<Application.PropertyValueType>
+    );
+  }
+}
+
+function StorageSetValue(
+  key as Application.PropertyKeyType,
+  value as Application.PropertyValueType
+) as Void {
+  try {
+    Toybox.Application.Storage.setValue(key, value);
+  } catch (ex) {
+    ex.printStackTrace();
+  }
+}
 function getApplicationProperty(
   key as Application.PropertyKeyType,
   dflt as Application.PropertyValueType
@@ -61,14 +122,27 @@ function getApplicationProperty(
 //   }
 // }
 
-function percentageOf(value as Numeric?, max as Numeric?) as Numeric {
+// Given min and max value, calculate the perc of value in this range.
+function percentageOf(
+  value as Numeric?,
+  min as Numeric,
+  max as Numeric?
+) as Numeric {
   if (value == null || max == null) {
     return 0.0f;
   }
+
   if (max <= 0) {
     return 0.0f;
   }
-  return value / (max / 100.0);
+  var calculatedValue = value - min;
+  var calculatedMax = max - min;
+  if (calculatedMax <= 0) {
+    // min should be smaller than max
+    return 0.0f;
+  }
+
+  return calculatedValue / (calculatedMax / 100.0);
 }
 
 function drawPercentageLine(
@@ -80,7 +154,9 @@ function drawPercentageLine(
   height as Number,
   color as ColorType
 ) as Void {
-  if (percentage > 100.0) { percentage = 100.0; }
+  if (percentage > 100.0) {
+    percentage = 100.0;
+  }
   var wPercentage = (maxwidth / 100.0) * percentage;
   dc.setColor(color, Graphics.COLOR_TRANSPARENT);
 
@@ -95,7 +171,7 @@ function drawPercentageCircleTarget(
   radius as Number,
   perc as Numeric,
   circleWidth as Number,
-  colorPerc100 as ColorType? 
+  colorPerc100 as ColorType?
 ) as Void {
   dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
   dc.drawCircle(x, y, radius);
@@ -103,10 +179,10 @@ function drawPercentageCircleTarget(
   if (perc < 100) {
     setColorByPerc(dc, perc, 0, null);
     drawPercentageCircle(dc, x, y, radius, perc, circleWidth);
-  } else {    
+  } else {
     setColorByPerc(dc, 100, 0, colorPerc100);
     drawPercentageCircle(dc, x, y, radius, 100, circleWidth);
-    setColorByPerc(dc, 100, 15, null);    
+    setColorByPerc(dc, 100, 15, null);
     dc.drawCircle(x, y, radius - circleWidth / 2);
   }
 
@@ -187,11 +263,16 @@ function getMatchingFont(
   return font;
 }
 
-function setColorByPerc(dc as Dc, perc as Numeric, darker as Number, colorPerc100 as ColorType? ) as Void {
+function setColorByPerc(
+  dc as Dc,
+  perc as Numeric,
+  darker as Number,
+  colorPerc100 as ColorType?
+) as Void {
   if (perc == 100 && colorPerc100 != null) {
-      dc.setColor(colorPerc100, Graphics.COLOR_TRANSPARENT);
-      return;
-  } 
+    dc.setColor(colorPerc100, Graphics.COLOR_TRANSPARENT);
+    return;
+  }
   var color = 0;
   if ($.gCreateColors) {
     color = percentageToColorAlt(perc, 180, $.PERC_COLORS_SCHEME, darker);
@@ -218,7 +299,7 @@ const PERC_COLORS_SCHEME_100 =
     [80, 169, 223, 191], // COLOR_WHITE_GREEN_3
     [85, 249, 231, 159], // COLOR_WHITE_YELLOW_3
     [95, 250, 215, 160], // COLOR_WHITE_ORANGE_3
-    [100, 255, 0, 0],    
+    [100, 255, 0, 0],
   ] as Array<Array<Number> >;
 
 const PERC_COLORS_SCHEME =
@@ -239,7 +320,7 @@ const PERC_COLORS_SCHEME =
     [145, 215, 189, 226], // COLOR_WHITE_PURPLE_3
     [155, 210, 180, 222], // COLOR_WHITE_DK_PURPLE_3
     [165, 187, 143, 206], // COLOR_WHITE_DK_PURPLE_4
-    [999, 0, 0, 0], 
+    [999, 0, 0, 0],
   ] as Array<Array<Number> >;
 
 // alpha, 255 is solid, 0 is transparent
@@ -295,7 +376,12 @@ function percentageToColorAlt(
     blue = blue - (blue / 100) * darker;
   }
 
-  return Graphics.createColor(alpha, red.toNumber(), green.toNumber(), blue.toNumber());
+  return Graphics.createColor(
+    alpha,
+    red.toNumber(),
+    green.toNumber(),
+    blue.toNumber()
+  );
 }
 /* TODO
 var percentColors = [
@@ -480,12 +566,17 @@ function is_leap_year(year as Number) as Boolean {
   return false;
 }
 
-function iso_week_number(year as Number, month as Number, day as Number) as Number {
+function iso_week_number(
+  year as Number,
+  month as Number,
+  day as Number
+) as Number {
   var first_day_of_year = julian_day(year, 1, 1);
   var given_day_of_year = julian_day(year, month, day);
 
   var day_of_week = (first_day_of_year + 3) % 7; // days past thursday
-  var week_of_year = (given_day_of_year - first_day_of_year + day_of_week + 4) / 7;
+  var week_of_year =
+    (given_day_of_year - first_day_of_year + day_of_week + 4) / 7;
 
   // week is at end of this year or the beginning of next year
   if (week_of_year == 53) {
@@ -511,4 +602,139 @@ function iso_week_number(year as Number, month as Number, day as Number) as Numb
   else {
     return week_of_year;
   }
+}
+
+function stringLeft(str as String, marker as String, dflt as String) as String {
+  if (str.length() == 0 || marker.length() == 0) {
+    return dflt;
+  }
+
+  var index = str.find(marker);
+  if (index == null) {
+    return dflt;
+  }
+  return str.substring(0, index) as String;
+}
+
+function stringRight(
+  str as String,
+  marker as String,
+  dflt as String
+) as String {
+  if (str.length() == 0 || marker.length() == 0) {
+    return dflt;
+  }
+
+  var index = str.find(marker);
+  if (index == null || index + 1 >= str.length()) {
+    return dflt;
+  }
+  return str.substring(index + 1, str.length()) as String;
+}
+
+function stringReplace(
+  str as String,
+  oldString as String,
+  newString as String
+) as String {
+  //str = str.toString(); // @@ TODO why crash here? -> because of too many nested function calls?
+  if (str.length() == 0 || oldString.length() == 0) {
+    return str;
+  }
+
+  var result = str;
+  var index = result.find(oldString);
+  var count = 0;
+  while (index != null && count < 30) {
+    var indexEnd = index + oldString.length();
+    var res =
+      result.substring(0, index) +
+      newString +
+      result.substring(indexEnd, result.length());
+    result = res;
+    index = result.find(oldString);
+    count = count + 1;
+  }
+
+  return result;
+}
+
+function ensureArraySize(
+  array as Array<Application.PropertyValueType>,
+  size as Number,
+  value as Application.PropertyValueType
+) as Boolean {
+  var changed = false;
+  while (array.size() < size) {
+    array.add(value);
+    changed = true;
+  }
+  return changed;
+}
+
+function getKeyAndIndex(key as String, index as Number) as String {
+  return Lang.format("$1$|$2$", [key, index.toString()]);
+}
+
+function maxChars(str as String, nrOfChars as Number) as String {
+  if (nrOfChars < 0 || str.length() <= nrOfChars) {
+    return str;
+  }
+  return str.substring(null, nrOfChars);
+}
+
+// 1:40 or 150:40 (if no {h} in template)
+function secondsToHourMinutes(totalSeconds as Numeric or Null) as String {
+  if (totalSeconds == null) {
+    return "";
+  }
+
+  // Force conversion to a standard integer Number to prevent UnexpectedTypeException
+  var totalSecondsInt = totalSeconds.toNumber();
+
+  var timeString = "{h}:{m}";
+  // Pure integer division for hours
+  var hours = totalSecondsInt / 3600;
+  timeString = $.stringReplace(timeString, "{h}", hours.format("%01d"));
+
+  // Get total remaining minutes, then modulo 60 using integers
+  var minutes = (totalSecondsInt / 60) % 60;
+  timeString = $.stringReplace(timeString, "{m}", minutes.format("%02d"));
+
+  return timeString;
+}
+
+function secondsToHourMinutesSeconds(
+  totalSeconds as Numeric or Null
+) as String {
+  if (totalSeconds == null) {
+    return "";
+  }
+  var timeString = "{h}:{m}:{s}";
+
+  // Force conversion to a standard integer Number to prevent UnexpectedTypeException
+  var totalSecondsInt = totalSeconds.toNumber();
+
+  // Pure integer division for hours
+  var hours = totalSecondsInt / 3600;
+  timeString = $.stringReplace(timeString, "{h}", hours.format("%01d"));
+
+  // Get total remaining minutes, then modulo 60 using integers
+  var minutes = (totalSecondsInt / 60) % 60;
+  timeString = $.stringReplace(timeString, "{m}", minutes.format("%02d"));
+
+  // Modulo 60 for seconds
+  var seconds = totalSecondsInt % 60;
+  timeString = $.stringReplace(timeString, "{s}", seconds.format("%02d"));
+
+  return timeString;
+}
+
+// Returns the floating-point remainder of x / y
+function fmod(x as Numeric, y as Numeric) as Numeric {
+    if (y == 0.0) {
+        return y; // Avoid division by zero
+    }
+    // System.println(["fmod x y", x, y, Math.floor(x / y), x - (y * Math.floor(x / y))]);
+    return x - (y * Math.floor(x / y));
 }

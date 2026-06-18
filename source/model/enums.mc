@@ -1,6 +1,8 @@
 import Toybox.Lang;
 import Toybox.System;
 
+const TotalEnumFocus as Number = 13;
+
 enum EnumFocus {
   FocusNothing = 0,
   FocusOdo = 1,
@@ -12,6 +14,9 @@ enum EnumFocus {
   FocusBack = 7,
   FocusCourse = 8,
   FocusTrack = 9,
+  FocusChain = 10,
+  FocusCustom1 = 11,
+  FocusCustom2 = 12,
 }
 
 enum EnumTrackRecording {
@@ -22,20 +27,27 @@ enum EnumTrackRecording {
 }
 
 enum EnumTireRecording {
-  TireRecDefault = 0,
-  TireRecProfile = 1,
-  TireRecSetA = 2,
-  TireRecSetB = 3,
-  TireRecSetC = 4,
-  TireRecSetD = 5,
+  // TireRecDefault = 0,
+  TireRecProfile = 0,
+  TireRecSetA = 1,
+  TireRecSetB = 2,
+  TireRecSetC = 3,
+  TireRecSetD = 4,
 }
 
 enum EnumChainRecording {
-  ChainRecDefault = 0,
-  ChainRecProfile = 1,
-  ChainRecAsTire = 2,
-  ChainRecSetA = 3,
-  ChainRecSetB = 4,
-  ChainRecSetC = 5,
-  ChainRecSetD = 6,
+  // ChainRecDefault = 0,
+  ChainRecProfile = 0,
+  ChainRecAsTire = 1,
+  ChainRecSetA = 2,
+  ChainRecSetB = 3,
+  ChainRecSetC = 4,
+  ChainRecSetD = 5,
+}
+
+enum EnumCustomAlertUnits {
+  CustomAlertDisabled = 0,
+  CustomAlertDistance = 1,
+  CustomAlertTimer = 2,
+  CustomAlertElapsed = 3,
 }
