@@ -19,11 +19,6 @@ todo optimize calcuations.
 
 
 
-Show cust1 / 2
-Show info per field size
-Zen mode -> only colors..?
-
-
 TODO: remove TireRecDefault -> or change to TireRecAllTogether -> useless?
 bug - switch profile totals
 - then do not save when swithcing profile (old value != new profile name)
